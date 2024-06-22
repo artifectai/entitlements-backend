@@ -42,6 +42,15 @@ export class AccessRequestsController {
     return this.accessRequestsService.update(user_id, dataset_id, frequency, status, updateAccessRequestDto);
   }
 
+  @Patch('revoke/:user_id/:dataset_id/:frequency')
+  revokeAccess(
+    @Param('user_id') user_id: number,
+    @Param('dataset_id') dataset_id: number,
+    @Param('frequency') frequency: string,
+  ) {
+    return this.accessRequestsService.revokeAccess(user_id, dataset_id, frequency);
+  }
+
   @Delete(':user_id/:dataset_id/:frequency')
   remove(
     @Param('user_id') user_id: number,
@@ -50,4 +59,5 @@ export class AccessRequestsController {
   ) {
     return this.accessRequestsService.remove(user_id, dataset_id, frequency);
   }
+  
 }
