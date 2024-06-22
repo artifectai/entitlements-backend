@@ -24,8 +24,9 @@ export class DatasetsController {
   @Get(':name/:frequency/data')
   async getDataset(
     @Param('name') name: string,
-    @Param('frequency') frequency: string
+    @Param('frequency') frequency: string,
+    @Param('user_id') user_id: string
     ): Promise<any> {
-    return this.datasetsService.getDatasetData(name, frequency);
+    return this.datasetsService.getDatasetData(name, frequency, user_id);
   }
 }
