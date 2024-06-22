@@ -2,7 +2,8 @@ import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { AccessRequest } from '../models/access-request.model';
 
 @Table({
-  tableName: 'datasets'
+    tableName: 'datasets', 
+    schema: 'public',   
 })
 export class Dataset extends Model<Dataset> {
   @Column({

@@ -3,8 +3,10 @@ import { User } from './user.model';
 import { Dataset } from './dataset.model';
 
 @Table({
-  tableName: 'access_requests' 
+  tableName: 'access_requests', 
+  schema: 'public'
 })
+
 export class AccessRequest extends Model<AccessRequest> {
   @ForeignKey(() => User)
   @Column
@@ -30,13 +32,13 @@ export class AccessRequest extends Model<AccessRequest> {
     type: DataType.DATE,
     allowNull: false,
   })
-  requestedAt: Date;
+  requested_at: Date;
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
   })
-  resolvedAt: Date | null;
+  resolved_at: Date | null;
 
   @BelongsTo(() => User)
   user: User;
