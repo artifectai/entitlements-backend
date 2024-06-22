@@ -9,12 +9,14 @@ import { getSequelizeConfig } from './config/sequelize.config';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
+import { DatasetsModule } from './modules/datasets/datasets.module';
 
 @Module({
   imports: [
     CustomConfigModule,
     DatabaseModule,
     UsersModule,
+    DatasetsModule,
     SequelizeModule.forRootAsync({
       imports: [CustomConfigModule],
       inject: [ConfigService],
@@ -22,7 +24,7 @@ import { UsersModule } from './modules/users/users.module';
     }),
     SequelizeModule.forFeature([User, Dataset, AccessRequest])
   ],
-  providers: [DatabaseService],
+  providers: [DatabaseService]
 })
 
 export class AppModule {}

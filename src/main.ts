@@ -9,9 +9,6 @@ import { Sequelize } from 'sequelize-typescript';
 
 dotenv.config();
 
-console.log('NODE_ENV:', process.env.NODE_ENV);
-console.log('DB_HOST:', process.env.DB_HOST);
-
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 

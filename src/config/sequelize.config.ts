@@ -11,12 +11,6 @@ export const getSequelizeConfig = (configService: ConfigService): SequelizeOptio
   const password = configService.get<string>('DB_PASS');
   const database = configService.get<string>('DB_NAME');
 
-  console.log('DB_HOST:', host);
-  console.log('DB_PORT:', port);
-  console.log('DB_USER:', username);
-  console.log('DB_PASS:', password);
-  console.log('DB_NAME:', database);
-
   const sequelizeConfig: SequelizeOptions = {
     dialect: 'postgres',
     host,

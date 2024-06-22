@@ -3,7 +3,8 @@ import { AccessRequest } from '../models/access-request.model';
 
 @Table({
     tableName: 'datasets', 
-    schema: 'public',   
+    schema: 'public',  
+    timestamps: false 
 })
 export class Dataset extends Model<Dataset> {
   @Column({
