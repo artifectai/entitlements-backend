@@ -1,13 +1,17 @@
 import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
 import { AccessRequest } from '../models/access-request.model';
 
-@Table
+@Table({
+    tableName: 'users', 
+    schema: 'public',   
+    timestamps: false
+})
 export class User extends Model<User> {
   @Column({
     type: DataType.STRING,
     allowNull: false,
   })
-  apiKey: string;
+  api_key: string;
 
   @Column({
     type: DataType.STRING,
@@ -25,13 +29,13 @@ export class User extends Model<User> {
     type: DataType.STRING, 
     allowNull: false,
   })
-  firstName: string;
+  first_name: string;
 
   @Column({
     type: DataType.STRING, 
     allowNull: false,
   })
-  lastName: string;
+  last_name: string;
 
   @HasMany(() => AccessRequest)
   accessRequests: AccessRequest[];

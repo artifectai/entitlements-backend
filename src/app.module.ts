@@ -8,11 +8,13 @@ import { AccessRequest } from './models/access-request.model';
 import { getSequelizeConfig } from './config/sequelize.config';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
     CustomConfigModule,
     DatabaseModule,
+    UsersModule,
     SequelizeModule.forRootAsync({
       imports: [CustomConfigModule],
       inject: [ConfigService],
