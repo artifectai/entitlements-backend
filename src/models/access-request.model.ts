@@ -47,6 +47,20 @@ export class AccessRequest extends Model<AccessRequest> {
   })
   resolved_at: Date | null;
 
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  expiry_date: Date | null;
+
+
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false,
+    allowNull: false,
+  })
+  is_temporary: boolean;
+
   @BelongsTo(() => User)
   user: User;
 

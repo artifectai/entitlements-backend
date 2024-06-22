@@ -11,6 +11,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
 import { DatasetsModule } from './modules/datasets/datasets.module';
 import { AccessRequestsModule } from './modules/access-requests/access-requests.module';
+import { ScheduleTasksModule } from './schedule/schedule/schedule.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { AccessRequestsModule } from './modules/access-requests/access-requests.
     UsersModule,
     DatasetsModule,
     AccessRequestsModule,
+    ScheduleTasksModule
   ],
   providers: [DatabaseService]
 })

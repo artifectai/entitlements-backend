@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsInt, IsDate, IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString, IsInt, IsDate, IsOptional, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateAccessRequestDto {
@@ -27,4 +27,13 @@ export class CreateAccessRequestDto {
   @IsOptional()
   @Type(() => Date)
   resolved_at?: Date;
+
+  @IsDate()
+  @IsOptional()
+  @Type(() => Date)
+  expiry_date?: Date;
+
+  @IsBoolean()
+  @IsOptional()
+  is_temporary?: boolean;
 }

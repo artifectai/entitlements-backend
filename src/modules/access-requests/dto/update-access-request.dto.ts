@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateAccessRequestDto } from './create-access-request.dto';
-import { IsString, IsOptional, IsDateString } from 'class-validator';
+import { IsString, IsOptional, IsDateString, IsBoolean } from 'class-validator';
 
 export class UpdateAccessRequestDto extends PartialType(CreateAccessRequestDto) {
   @IsString()
@@ -14,4 +14,12 @@ export class UpdateAccessRequestDto extends PartialType(CreateAccessRequestDto) 
   @IsDateString()
   @IsOptional()
   resolved_at?: Date;
+
+  @IsDateString()
+  @IsOptional()
+  expiry_date?: Date;
+
+  @IsBoolean()
+  @IsOptional()
+  is_temporary?: boolean;
 }
