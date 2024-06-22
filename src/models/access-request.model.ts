@@ -4,7 +4,8 @@ import { Dataset } from './dataset.model';
 
 @Table({
   tableName: 'access_requests', 
-  schema: 'public'
+  schema: 'public', 
+  timestamps: false
 })
 
 export class AccessRequest extends Model<AccessRequest> {
