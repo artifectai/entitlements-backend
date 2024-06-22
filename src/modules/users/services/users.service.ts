@@ -25,8 +25,6 @@ export class UsersService {
     return this.userModel.findOne({ where: { api_key } });
   }
 
-  // Optional methods for completeness
-
   async findAll(): Promise<User[]> {
     return this.userModel.findAll();
   }

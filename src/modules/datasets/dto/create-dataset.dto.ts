@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateDatasetDto {
   @IsString()
@@ -12,4 +12,8 @@ export class CreateDatasetDto {
   @IsString()
   @IsNotEmpty()
   frequency: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  market_cap_usd: number;
 }

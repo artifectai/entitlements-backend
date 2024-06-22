@@ -25,6 +25,12 @@ export class Dataset extends Model<Dataset> {
   })
   frequency: string;
 
+  @Column({
+    type: DataType.DECIMAL(20, 2), 
+    allowNull: true,
+  })
+  market_cap_usd: number;
+
   @HasMany(() => AccessRequest)
   accessRequests: AccessRequest[];
 }
