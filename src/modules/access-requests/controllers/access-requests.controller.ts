@@ -17,6 +17,11 @@ export class AccessRequestsController {
     return this.accessRequestsService.findAll();
   }
 
+  @Get('/pending')
+  findPendingRequests() {
+    return this.accessRequestsService.findPendingRequests();
+  }
+
   @Get(':user_id/:dataset_id/:frequency')
   findOne(
     @Param('user_id') user_id: number,

@@ -30,6 +30,10 @@ export class AccessRequestsService {
     return this.accessRequestModel.findAll();
   }
 
+  async findPendingRequests(): Promise<AccessRequest[]> {
+    return this.accessRequestModel.findAll({ where: { status: 'pending' } });
+  }
+
   async findOne(user_id: number, dataset_id: number, frequency: string): Promise<AccessRequest> {
     return this.accessRequestModel.findOne({ where: { user_id, dataset_id, frequency } });
   }
