@@ -8,7 +8,13 @@ export class TasksController {
 
   @Get('run-cron')
   async runCron() {
-    await this.tasksService.handleCron();
+    await this.tasksService.checkExpiredTrialAccess();
+    return 'Cron job executed';
+  }
+
+  @Get('run-backfill')
+  async runBackfill() {
+    await this.tasksService.backfillMarketCap();
     return 'Cron job executed';
   }
 }

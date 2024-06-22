@@ -13,7 +13,6 @@ export class DatasetsService {
     private accessRequestModel: typeof AccessRequest,
   ) {}
 
-
   async findAll(): Promise<Dataset[]> {
     return this.datasetModel.findAll();
   }
