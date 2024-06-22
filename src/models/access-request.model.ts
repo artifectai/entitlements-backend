@@ -5,17 +5,23 @@ import { Dataset } from './dataset.model';
 @Table({
   tableName: 'access_requests', 
   schema: 'public', 
-  timestamps: false
+  timestamps: false,
+  indexes: [
+    {
+      unique: true,
+      fields: ['user_id', 'dataset_id', 'frequency'],
+    },
+  ]
 })
 
 export class AccessRequest extends Model<AccessRequest> {
   @ForeignKey(() => User)
   @Column
-  userId: number;
+  user_id: number;
 
   @ForeignKey(() => Dataset)
   @Column
-  datasetId: number;
+  dataset_id: number;
 
   @Column({
     type: DataType.STRING,

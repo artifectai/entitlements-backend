@@ -10,19 +10,21 @@ import { ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
 import { DatasetsModule } from './modules/datasets/datasets.module';
+import { AccessRequestsModule } from './modules/access-requests/access-requests.module';
 
 @Module({
   imports: [
     CustomConfigModule,
     DatabaseModule,
-    UsersModule,
-    DatasetsModule,
     SequelizeModule.forRootAsync({
       imports: [CustomConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => getSequelizeConfig(configService),
     }),
-    SequelizeModule.forFeature([User, Dataset, AccessRequest])
+    SequelizeModule.forFeature([User, Dataset, AccessRequest]),
+    UsersModule,
+    DatasetsModule,
+    AccessRequestsModule,
   ],
   providers: [DatabaseService]
 })
