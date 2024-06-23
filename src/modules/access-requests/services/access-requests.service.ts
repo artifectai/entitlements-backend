@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/sequelize';
 import { AccessRequest } from '../../../models/access-request.model';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
+import { NotificationsService } from 'src/modules/notifications/services/notifications.service';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -10,6 +11,7 @@ export class AccessRequestsService {
   constructor(
     @InjectModel(AccessRequest)
     private accessRequestModel: typeof AccessRequest,
+    private notificationsService: NotificationsService
   ) {}
 
   async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
@@ -26,7 +28,15 @@ export class AccessRequestsService {
         is_temporary: is_temporary ?? false,
       });
 
-    return accessRequest.save();
+    const savedAccessRequest = await accessRequest.save();
+
+    this.notificationsService.sendNotification({
+      type: 'NEW_ACCESS_REQUEST',
+      message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
+      accessRequest: savedAccessRequest
+    });
+
+    return savedAccessRequest;
   }
 
   async findAll(): Promise<AccessRequest[]> {
@@ -62,11 +72,24 @@ export class AccessRequestsService {
         updatedAccessRequest.is_temporary = updateAccessRequestDto.is_temporary;
         }
         await updatedAccessRequest.save();
+
+        this.notificationsService.sendNotification({
+          type: 'ACCESS_REQUEST_UPDATED',
+          message: `Your access request for dataset ${dataset_id} and frequency ${frequency} has been ${status}.`,
+          accessRequest: updatedAccessRequest
+        });
+        console.log('Notification sent:', {
+            type: 'ACCESS_REQUEST_UPDATED',
+            message: `Your access request for dataset ${dataset_id} and frequency ${frequency} has been ${status}.`,
+            accessRequest: updatedAccessRequest
+          });
+
+
         return [affectedCount, [updatedAccessRequest]];
     }
   
       throw new Error('Access request not found');
-}
+  }
 
   async remove(user_id: number, dataset_id: number, frequency: string): Promise<void> {
     const accessRequest = await this.findOne(user_id, dataset_id, frequency);
@@ -80,6 +103,13 @@ export class AccessRequestsService {
     if (accessRequest) {
         accessRequest.status = 'revoked';
         await accessRequest.save();
+
+        this.notificationsService.sendNotification({
+          type: 'ACCESS_REVOKED',
+          message: `Your access for dataset ${dataset_id} and frequency ${frequency} has been revoked.`,
+          accessRequest
+        });
+
     } else {
         throw new NotFoundException('Access request not found');
     }
@@ -98,7 +128,13 @@ export class AccessRequestsService {
     for (const request of expiredRequests) {
         request.status = 'expired';
         await request.save();
+
+        this.notificationsService.sendNotification({
+          type: 'ACCESS_EXPIRED',
+          message: `Your temporary access for dataset ${request.dataset_id} and frequency ${request.frequency} has expired.`,
+          accessRequest: request
+        });
     }
   }
-  
 }
+

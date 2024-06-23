@@ -12,6 +12,9 @@ import { UsersModule } from './modules/users/users.module';
 import { DatasetsModule } from './modules/datasets/datasets.module';
 import { AccessRequestsModule } from './modules/access-requests/access-requests.module';
 import { ScheduleTasksModule } from './schedule/schedule/schedule.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { NotificationsService } from './modules/notifications/services/notifications.service';
+import { NotificationsGateway } from './modules/notifications/gateway/notifications.gateway';
 
 @Module({
   imports: [
@@ -26,9 +29,12 @@ import { ScheduleTasksModule } from './schedule/schedule/schedule.module';
     UsersModule,
     DatasetsModule,
     AccessRequestsModule,
-    ScheduleTasksModule
+    ScheduleTasksModule,
+    NotificationsModule
   ],
-  providers: [DatabaseService]
+  // providers: [DatabaseService]
+  providers: [DatabaseService, NotificationsService, NotificationsGateway],
+
 })
 
 export class AppModule {}
