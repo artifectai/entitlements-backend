@@ -9,17 +9,17 @@ export class UpdateAccessRequestDto extends PartialType(CreateAccessRequestDto) 
 
   @IsDateString()
   @IsOptional()
-  requested_at?: Date;
+  requestedAt?: Date;
 
   @IsDateString()
   @IsOptional()
-  resolved_at?: Date;
+  resolvedAt?: Date;
 
   @IsDateString()
   @IsOptional()
-  expiry_date?: Date;
+  expiryDate?: Date;
 
   @IsBoolean()
   @IsOptional()
-  is_temporary?: boolean;
+  isTemporary?: boolean;
 }

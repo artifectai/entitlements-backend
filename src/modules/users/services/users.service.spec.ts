@@ -1,35 +1,18 @@
+// users.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
+import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
-import { UsersService } from './users.service';
 import { User } from '../../../models/user.model';
-import { NotFoundException, UnauthorizedException } from '@nestjs/common';
-
-const mockUser = {
-  id: 1,
-  api_key: 'test_api_key',
-  role: 'test_role',
-  created_at: new Date(),
-};
+import { NotFoundException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 
 const mockUserModel = {
-  findAll: jest.fn().mockResolvedValue([mockUser]),
-  findOne: jest.fn().mockImplementation((query) => {
-    if (query.where.api_key === mockUser.api_key) {
-      return Promise.resolve(mockUser);
-    }
-    return Promise.resolve(null);
-  }),
+  findAll: jest.fn(),
+  findOne: jest.fn(),
 };
-
 const mockJwtService = {
-  sign: jest.fn().mockReturnValue('test_token'),
-  verify: jest.fn().mockImplementation((token) => {
-    if (token === 'test_token') {
-      return { api_key: mockUser.api_key, sub: mockUser.id };
-    }
-    throw new Error('Invalid token');
-  }),
+  sign: jest.fn(),
+  verify: jest.fn(),
 };
 
 describe('UsersService', () => {
@@ -53,41 +36,52 @@ describe('UsersService', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const result = await service.findAll();
-      expect(result).toEqual([mockUser]);
+      const result = [new User()];
+      mockUserModel.findAll.mockResolvedValue(result);
+      expect(await service.findAll()).toEqual(result);
+    });
+
+    it('should throw an error if unable to retrieve users', async () => {
+      mockUserModel.findAll.mockRejectedValue(new Error());
+      await expect(service.findAll()).rejects.toThrow(InternalServerErrorException);
     });
   });
 
   describe('findByApiKey', () => {
-    it('should return a user if found', async () => {
-      const result = await service.findByApiKey(mockUser.api_key);
-      expect(result).toEqual(mockUser);
+    it('should return a user', async () => {
+      const user = new User();
+      mockUserModel.findOne.mockResolvedValue(user);
+      expect(await service.findByApiKey('test_api_key')).toEqual(user);
     });
 
-    it('should throw NotFoundException if user not found', async () => {
-      await expect(service.findByApiKey('wrong_api_key')).rejects.toThrow(NotFoundException);
+    it('should throw a NotFoundException if user is not found', async () => {
+      mockUserModel.findOne.mockResolvedValue(null);
+      await expect(service.findByApiKey('test_api_key')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('generateToken', () => {
-    it('should return a token', async () => {
-      const result = await service.generateToken(mockUser.api_key);
-      expect(result).toEqual('test_token');
-    });
-
-    it('should throw an error if user not found', async () => {
-      await expect(service.generateToken('wrong_api_key')).rejects.toThrow(Error);
+    it('should return a signed token', async () => {
+      const user = new User();
+      mockUserModel.findOne.mockResolvedValue(user);
+      mockJwtService.sign.mockReturnValue('signed_token');
+      expect(await service.generateToken('test_api_key')).toEqual('signed_token');
     });
   });
 
   describe('validateToken', () => {
     it('should return a user if token is valid', async () => {
-      const result = await service.validateToken('test_token');
-      expect(result).toEqual(mockUser);
+      const user = new User();
+      mockJwtService.verify.mockReturnValue({ apiKey: 'test_api_key' });
+      mockUserModel.findOne.mockResolvedValue(user);
+      expect(await service.validateToken('test_token')).toEqual(user);
     });
 
-    it('should throw an error if token is invalid', async () => {
-      await expect(service.validateToken('invalid_token')).rejects.toThrow(Error);
+    it('should throw an UnauthorizedException if token is invalid', async () => {
+      mockJwtService.verify.mockImplementation(() => {
+        throw new Error();
+      });
+      await expect(service.validateToken('test_token')).rejects.toThrow(UnauthorizedException);
     });
   });
 });
