@@ -1,104 +1,169 @@
-// import { Test, TestingModule } from '@nestjs/testing';
-// import { getModelToken } from '@nestjs/sequelize';
-// import { DatasetsService } from './datasets.service';
-// import { Dataset } from '../../../models/dataset.model';
-// import { AccessRequest } from '../../../models/access-request.model';
-// import axios from 'axios';
-// import { UnauthorizedException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { getModelToken } from '@nestjs/sequelize';
+import { DatasetsService } from './datasets.service';
+import { Dataset } from '../../../models/dataset.model';
+import { AccessRequest } from '../../../models/access-request.model';
+import { Frequency } from '../../../models/frequency.model';
+import axios from 'axios';
+import MockAdapter from 'axios-mock-adapter';
+import { NotFoundException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 
-// class MockDataset {
-//   static findAll = jest.fn();
-//   static findOne = jest.fn();
-// }
+describe('DatasetsService', () => {
+  let service: DatasetsService;
+  let datasetModel: typeof Dataset;
+  let accessRequestModel: typeof AccessRequest;
+  let frequencyModel: typeof Frequency;
+  let mockAxios: MockAdapter;
 
-// class MockAccessRequest {
-//   static findOne = jest.fn();
-// }
+  beforeEach(async () => {
+    mockAxios = new MockAdapter(axios);
 
-// jest.mock('axios');
-// const mockedAxios = axios as jest.Mocked<typeof axios>;
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        DatasetsService,
+        {
+          provide: getModelToken(Dataset),
+          useValue: {
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(AccessRequest),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: getModelToken(Frequency),
+          useValue: {
+            findOne: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
 
-// describe('DatasetsService', () => {
-//   let service: DatasetsService;
-//   let datasetModel: typeof Dataset;
-//   let accessRequestModel: typeof AccessRequest;
+    service = module.get<DatasetsService>(DatasetsService);
+    datasetModel = module.get<typeof Dataset>(getModelToken(Dataset));
+    accessRequestModel = module.get<typeof AccessRequest>(getModelToken(AccessRequest));
+    frequencyModel = module.get<typeof Frequency>(getModelToken(Frequency));
+  });
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       providers: [
-//         DatasetsService,
-//         {
-//           provide: getModelToken(Dataset),
-//           useValue: MockDataset,
-//         },
-//         {
-//           provide: getModelToken(AccessRequest),
-//           useValue: MockAccessRequest,
-//         },
-//       ],
-//     }).compile();
+  afterEach(() => {
+    mockAxios.reset();
+  });
 
-//     service = module.get<DatasetsService>(DatasetsService);
-//     datasetModel = module.get<typeof Dataset>(getModelToken(Dataset));
-//     accessRequestModel = module.get<typeof AccessRequest>(getModelToken(AccessRequest));
-//   });
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
 
-//   it('should be defined', () => {
-//     expect(service).toBeDefined();
-//   });
+  describe('findAll', () => {
+    it('should return an array of datasets', async () => {
+      const expectedDatasets = [{ id: '1', name: 'dataset1', symbol: 'ds1' }];
+      jest.spyOn(datasetModel, 'findAll').mockResolvedValue(expectedDatasets as Dataset[]);
 
-//   describe('findAll', () => {
-//     it('should return an array of datasets', async () => {
-//       const datasets = [{ id: 1, name: 'Bitcoin', symbol: 'BTC', frequency: 'd1', market_cap_usd: 1000000 }];
-//       jest.spyOn(datasetModel, 'findAll').mockResolvedValue(datasets as Dataset[]);
+      const result = await service.findAll();
+      expect(result).toEqual(expectedDatasets);
+    });
 
-//       const result = await service.findAll();
-//       expect(result).toEqual(datasets);
-//     });
-//   });
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(datasetModel, 'findAll').mockRejectedValue(new Error('Service error'));
 
-//   describe('findBySymbol', () => {
-//     it('should return an array of datasets with the given symbol', async () => {
-//       const datasets = [{ id: 1, name: 'Bitcoin', symbol: 'BTC', frequency: 'd1', market_cap_usd: 1000000 }];
-//       jest.spyOn(datasetModel, 'findAll').mockResolvedValue(datasets as Dataset[]);
+      await expect(service.findAll()).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//       const result = await service.findBySymbol('BTC');
-//       expect(result).toEqual(datasets);
-//     });
-//   });
+  describe('findBySymbol', () => {
+    it('should return an array of datasets with the given symbol', async () => {
+      const symbol = 'ds1';
+      const expectedDatasets = [{ id: '1', name: 'dataset1', symbol }];
+      jest.spyOn(datasetModel, 'findAll').mockResolvedValue(expectedDatasets as Dataset[]);
 
-//   describe('getSpecificPricingData', () => {
-//     it('should return pricing data for the given name', async () => {
-//       const pricingData = { data: { priceUsd: '10000' } };
-//       mockedAxios.get.mockResolvedValue({ data: pricingData });
+      const result = await service.findBySymbol(symbol);
+      expect(result).toEqual(expectedDatasets);
+    });
 
-//       const result = await service.getSpecificPricingData('bitcoin');
-//       expect(result).toEqual(pricingData);
-//     });
-//   });
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      const symbol = 'ds1';
+      jest.spyOn(datasetModel, 'findAll').mockRejectedValue(new Error('Service error'));
 
-//   describe('getDatasetData', () => {
-//     it('should throw an error if dataset name is invalid', async () => {
-//       await expect(service.getDatasetData('invalid', 'd1', 1)).rejects.toThrow('Invalid dataset name');
-//     });
+      await expect(service.findBySymbol(symbol)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//     it('should throw an error if frequency is invalid', async () => {
-//       await expect(service.getDatasetData('bitcoin', 'invalid', 1)).rejects.toThrow('Invalid frequency');
-//     });
+  describe('getSpecificPricingData', () => {
+    it('should return pricing data for the given name', async () => {
+      const name = 'bitcoin';
+      const expectedData = { data: { id: 'bitcoin', priceUsd: '40000' } };
+      mockAxios.onGet(`https://api.coincap.io/v2/assets/${name.toLowerCase()}`).reply(200, expectedData);
 
-//     it('should throw UnauthorizedException if user does not have access', async () => {
-//       jest.spyOn(accessRequestModel, 'findOne').mockResolvedValue(null);
-//       await expect(service.getDatasetData('bitcoin', 'd1', 1)).rejects.toThrow(UnauthorizedException);
-//     });
+      const result = await service.getSpecificPricingData(name);
+      expect(result).toEqual(expectedData);
+    });
 
-//     it('should return dataset data if user has access', async () => {
-//       const mockAccessRequest = { id: 1, user_id: 1, dataset_id: 'bitcoin', frequency: 'd1', status: 'approved' };
-//       jest.spyOn(accessRequestModel, 'findOne').mockResolvedValue(mockAccessRequest as any);
-//       const datasetData = { data: { history: 'sample data' } };
-//       mockedAxios.get.mockResolvedValue({ data: datasetData });
+    it('should throw InternalServerErrorException if API call fails', async () => {
+      const name = 'bitcoin';
+      mockAxios.onGet(`https://api.coincap.io/v2/assets/${name.toLowerCase()}`).reply(500);
 
-//       const result = await service.getDatasetData('bitcoin', 'd1', 1);
-//       expect(result).toEqual(datasetData);
-//     });
-//   });
-// });
+      await expect(service.getSpecificPricingData(name)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('getDatasetData', () => {
+    const name = 'dataset1';
+    const frequency = 'daily';
+    const userId = 'user1';
+
+    it('should return dataset data if user has access', async () => {
+      const dataset = { id: '1', name, symbol: 'ds1' };
+      const validFrequency = { id: 'freq1', datasetId: '1', frequency };
+      const accessRequest = { id: 'req1', userId, datasetId: '1', frequencyId: 'freq1', status: 'approved' };
+      const expectedData = { data: [{ time: 1609459200000, priceUsd: '40000' }] };
+
+      jest.spyOn(datasetModel, 'findOne').mockResolvedValue(dataset as Dataset);
+      jest.spyOn(frequencyModel, 'findOne').mockResolvedValue(validFrequency as Frequency);
+      jest.spyOn(accessRequestModel, 'findOne').mockResolvedValue(accessRequest as AccessRequest);
+      mockAxios.onGet(`https://api.coincap.io/v2/assets/${dataset.symbol.toLowerCase()}/history?interval=${frequency}`).reply(200, expectedData);
+
+      const result = await service.getDatasetData(name, frequency, userId);
+      expect(result).toEqual(expectedData);
+    });
+
+    it('should throw NotFoundException if dataset is not found', async () => {
+      jest.spyOn(datasetModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.getDatasetData(name, frequency, userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if frequency is invalid', async () => {
+      const dataset = { id: '1', name, symbol: 'ds1' };
+      jest.spyOn(datasetModel, 'findOne').mockResolvedValue(dataset as Dataset);
+      jest.spyOn(frequencyModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.getDatasetData(name, frequency, userId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw UnauthorizedException if user does not have access', async () => {
+      const dataset = { id: '1', name, symbol: 'ds1' };
+      const validFrequency = { id: 'freq1', datasetId: '1', frequency };
+      jest.spyOn(datasetModel, 'findOne').mockResolvedValue(dataset as Dataset);
+      jest.spyOn(frequencyModel, 'findOne').mockResolvedValue(validFrequency as Frequency);
+      jest.spyOn(accessRequestModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.getDatasetData(name, frequency, userId)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw InternalServerErrorException if API call fails', async () => {
+      const dataset = { id: '1', name, symbol: 'ds1' };
+      const validFrequency = { id: 'freq1', datasetId: '1', frequency };
+      const accessRequest = { id: 'req1', userId, datasetId: '1', frequencyId: 'freq1', status: 'approved' };
+
+      jest.spyOn(datasetModel, 'findOne').mockResolvedValue(dataset as Dataset);
+      jest.spyOn(frequencyModel, 'findOne').mockResolvedValue(validFrequency as Frequency);
+      jest.spyOn(accessRequestModel, 'findOne').mockResolvedValue(accessRequest as AccessRequest);
+      mockAxios.onGet(`https://api.coincap.io/v2/assets/${dataset.symbol.toLowerCase()}/history?interval=${frequency}`).reply(500);
+
+      await expect(service.getDatasetData(name, frequency, userId)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+});
