@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
+import { Controller, Get, Param, Query, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { DatasetsService } from '../services/datasets.service';
 import { Dataset } from '../../../models/dataset.model';
 
@@ -8,17 +8,41 @@ export class DatasetsController {
 
   @Get()
   async findAll(): Promise<Dataset[]> {
-    return this.datasetsService.findAll();
+    try {
+      return await this.datasetsService.findAll();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve datasets');
+    }
   }
 
   @Get(':symbol')
   async findBySymbol(@Param('symbol') symbol: string): Promise<Dataset[]> { 
-    return this.datasetsService.findBySymbol(symbol);
+    try {
+      if (!symbol) {
+        throw new BadRequestException('Symbol parameter is required');
+      }
+      return await this.datasetsService.findBySymbol(symbol);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(`Failed to retrieve datasets with symbol ${symbol}`);
+    }
   }
 
   @Get(':name/pricing')
   async getPricingData(@Param('name') name: string): Promise<any> {
-    return this.datasetsService.getSpecificPricingData(name);
+    try {
+      if (!name) {
+        throw new BadRequestException('Name parameter is required');
+      }
+      return await this.datasetsService.getSpecificPricingData(name);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(`Failed to retrieve pricing data for ${name}`);
+    }
   }
 
   @Get(':name/:frequency/data')
@@ -27,7 +51,16 @@ export class DatasetsController {
     @Param('frequency') frequency: string,
     @Query('userId') userId: string
   ): Promise<any> {
-    return this.datasetsService.getDatasetData(name, frequency, userId);
+    try {
+      if (!name || !frequency || !userId) {
+        throw new BadRequestException('Name, frequency, and userId parameters are required');
+      }
+      return await this.datasetsService.getDatasetData(name, frequency, userId);
+    } catch (error) {
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new InternalServerErrorException(`Failed to retrieve dataset data for ${name} with frequency ${frequency}`);
+    }
   }
 }
-
