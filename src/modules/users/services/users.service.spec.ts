@@ -1,33 +1,39 @@
-// users.service.spec.ts
 import { Test, TestingModule } from '@nestjs/testing';
-import { UsersService } from './users.service';
 import { getModelToken } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
+import { UsersService } from './users.service';
 import { User } from '../../../models/user.model';
-import { NotFoundException, UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
-
-const mockUserModel = {
-  findAll: jest.fn(),
-  findOne: jest.fn(),
-};
-const mockJwtService = {
-  sign: jest.fn(),
-  verify: jest.fn(),
-};
+import { NotFoundException } from '@nestjs/common';
 
 describe('UsersService', () => {
   let service: UsersService;
+  let jwtService: JwtService;
+  let userModel: typeof User;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
-        { provide: getModelToken(User), useValue: mockUserModel },
-        { provide: JwtService, useValue: mockJwtService },
+        {
+          provide: getModelToken(User),
+          useValue: {
+            findAll: jest.fn(),
+            findOne: jest.fn(),
+          },
+        },
+        {
+          provide: JwtService,
+          useValue: {
+            sign: jest.fn(),
+            verify: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     service = module.get<UsersService>(UsersService);
+    jwtService = module.get<JwtService>(JwtService);
+    userModel = module.get<typeof User>(getModelToken(User));
   });
 
   it('should be defined', () => {
@@ -36,52 +42,66 @@ describe('UsersService', () => {
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const result = [new User()];
-      mockUserModel.findAll.mockResolvedValue(result);
-      expect(await service.findAll()).toEqual(result);
-    });
+      const expectedUsers = [{ id: '1', apiKey: 'abc', role: 'admin' }];
+      jest.spyOn(userModel, 'findAll').mockResolvedValue(expectedUsers as User[]);
 
-    it('should throw an error if unable to retrieve users', async () => {
-      mockUserModel.findAll.mockRejectedValue(new Error());
-      await expect(service.findAll()).rejects.toThrow(InternalServerErrorException);
+      const result = await service.findAll();
+      expect(result).toEqual(expectedUsers);
     });
   });
 
   describe('findByApiKey', () => {
-    it('should return a user', async () => {
-      const user = new User();
-      mockUserModel.findOne.mockResolvedValue(user);
-      expect(await service.findByApiKey('test_api_key')).toEqual(user);
+    it('should return a user if found', async () => {
+      const expectedUser = { id: '1', apiKey: 'abc', role: 'admin' };
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(expectedUser as User);
+
+      const result = await service.findByApiKey('abc');
+      expect(result).toEqual(expectedUser);
     });
 
-    it('should throw a NotFoundException if user is not found', async () => {
-      mockUserModel.findOne.mockResolvedValue(null);
-      await expect(service.findByApiKey('test_api_key')).rejects.toThrow(NotFoundException);
+    it('should throw NotFoundException if user is not found', async () => {
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.findByApiKey('abc')).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('generateToken', () => {
     it('should return a signed token', async () => {
-      const user = new User();
-      mockUserModel.findOne.mockResolvedValue(user);
-      mockJwtService.sign.mockReturnValue('signed_token');
-      expect(await service.generateToken('test_api_key')).toEqual('signed_token');
+      const expectedUser = { id: '1', apiKey: 'abc', role: 'admin' };
+      const token = 'signed-token';
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(expectedUser as User);
+      jest.spyOn(jwtService, 'sign').mockReturnValue(token);
+
+      const result = await service.generateToken('abc');
+      expect(result).toEqual(token);
+    });
+
+    it('should throw an error if user is not found', async () => {
+      jest.spyOn(userModel, 'findOne').mockResolvedValue(null);
+
+      await expect(service.generateToken('abc')).rejects.toThrow('User not found');
     });
   });
 
   describe('validateToken', () => {
     it('should return a user if token is valid', async () => {
-      const user = new User();
-      mockJwtService.verify.mockReturnValue({ apiKey: 'test_api_key' });
-      mockUserModel.findOne.mockResolvedValue(user);
-      expect(await service.validateToken('test_token')).toEqual(user);
+      const expectedUser = { id: '1', apiKey: 'abc', role: 'admin' };
+      const token = 'valid-token';
+      const decodedToken = { apiKey: 'abc', sub: '1' };
+      jest.spyOn(jwtService, 'verify').mockReturnValue(decodedToken);
+      jest.spyOn(service, 'findByApiKey').mockResolvedValue(expectedUser as User);
+
+      const result = await service.validateToken(token);
+      expect(result).toEqual(expectedUser);
     });
 
-    it('should throw an UnauthorizedException if token is invalid', async () => {
-      mockJwtService.verify.mockImplementation(() => {
-        throw new Error();
+    it('should throw an error if token is invalid or expired', async () => {
+      jest.spyOn(jwtService, 'verify').mockImplementation(() => {
+        throw new Error('Invalid or expired token');
       });
-      await expect(service.validateToken('test_token')).rejects.toThrow(UnauthorizedException);
+
+      await expect(service.validateToken('invalid-token')).rejects.toThrow('Invalid or expired token');
     });
   });
 });

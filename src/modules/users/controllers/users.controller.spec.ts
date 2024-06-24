@@ -1,24 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { UsersController } from './users.controller';
 import { UsersService } from '../services/users.service';
-import { User } from '../../../models/user.model'; 
-
-class MockUser {
-  id: number;
-  api_key: string;
-  role: string;
-  created_at: Date;
-
-  constructor(id: number, api_key: string, role: string, created_at: Date) {
-    this.id = id;
-    this.api_key = api_key;
-    this.role = role;
-    this.created_at = created_at;
-  }
-}
+import { User } from '../../../models/user.model';
+import { UnauthorizedException, InternalServerErrorException } from '@nestjs/common';
 
 describe('UsersController', () => {
-  let usersController: UsersController;
+  let controller: UsersController;
   let usersService: UsersService;
 
   beforeEach(async () => {
@@ -36,46 +23,80 @@ describe('UsersController', () => {
       ],
     }).compile();
 
-    usersController = module.get<UsersController>(UsersController);
+    controller = module.get<UsersController>(UsersController);
     usersService = module.get<UsersService>(UsersService);
   });
 
   it('should be defined', () => {
-    expect(usersController).toBeDefined();
+    expect(controller).toBeDefined();
   });
 
   describe('findAll', () => {
     it('should return an array of users', async () => {
-      const result: MockUser[] = [
-        new MockUser(1, 'key1', 'admin', new Date()),
-      ];
+      const expectedUsers = [{ id: '1', apiKey: 'abc', role: 'admin' }];
+      jest.spyOn(usersService, 'findAll').mockResolvedValue(expectedUsers as User[]);
 
-      jest.spyOn(usersService, 'findAll').mockResolvedValue(result as unknown as User[]);
+      const result = await controller.findAll();
+      expect(result).toEqual(expectedUsers);
+    });
 
-      expect(await usersController.findAll()).toBe(result);
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(usersService, 'findAll').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.findAll()).rejects.toThrow(InternalServerErrorException);
     });
   });
 
   describe('generateToken', () => {
     it('should return a token', async () => {
-      const result = 'jwt_token';
-      const apiKey = 'key1';
+      const apiKey = 'abc';
+      const token = 'signed-token';
+      jest.spyOn(usersService, 'generateToken').mockResolvedValue(token);
 
-      jest.spyOn(usersService, 'generateToken').mockResolvedValue(result);
+      const result = await controller.generateToken(apiKey);
+      expect(result).toEqual(token);
+    });
 
-      expect(await usersController.generateToken(apiKey)).toBe(result);
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      const apiKey = 'abc';
+      jest.spyOn(usersService, 'generateToken').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.generateToken(apiKey)).rejects.toThrow(InternalServerErrorException);
     });
   });
 
   describe('validateUser', () => {
-    it('should return a user', async () => {
-      const user: MockUser = new MockUser(1, 'key1', 'admin', new Date());
-      const token = 'jwt_token';
-      const authHeader = `Bearer ${token}`;
+    it('should return a user if token is valid', async () => {
+      const authHeader = 'Bearer valid-token';
+      const token = 'valid-token';
+      const expectedUser = { id: '1', apiKey: 'abc', role: 'admin' };
+      jest.spyOn(usersService, 'validateToken').mockResolvedValue(expectedUser as User);
 
-      jest.spyOn(usersService, 'validateToken').mockResolvedValue(user as unknown as User);
+      const result = await controller.validateUser(authHeader);
+      expect(result).toEqual(expectedUser);
+    });
 
-      expect(await usersController.validateUser(authHeader)).toBe(user);
+    it('should throw UnauthorizedException if Authorization header is missing', async () => {
+      await expect(controller.validateUser('')).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if token is missing in the Authorization header', async () => {
+      const authHeader = 'Bearer ';
+      await expect(controller.validateUser(authHeader)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if token is invalid', async () => {
+      const authHeader = 'Bearer invalid-token';
+      jest.spyOn(usersService, 'validateToken').mockRejectedValue(new Error('Invalid token'));
+
+      await expect(controller.validateUser(authHeader)).rejects.toThrow(UnauthorizedException);
+    });
+
+    it('should throw UnauthorizedException if service throws an error', async () => {
+      const authHeader = 'Bearer valid-token';
+      jest.spyOn(usersService, 'validateToken').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.validateUser(authHeader)).rejects.toThrow(UnauthorizedException);
     });
   });
 });
