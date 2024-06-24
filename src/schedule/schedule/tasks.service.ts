@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import { DatasetsService } from 'src/modules/datasets/services/datasets.service';
-import { AccessRequestsService } from 'src/modules/access-requests/services/access-requests.service';
+import { DatasetsService } from '../../modules/datasets/services/datasets.service';
+import { AccessRequestsService } from '../../modules/access-requests/services/access-requests.service';
 import axios from 'axios'
 
 @Injectable()
@@ -34,8 +34,11 @@ export class TasksService {
         
         console.log(`Updated market cap for ${dataset.name}: $${marketCapUsd}`);
       } catch (error) {
-        console.error(`Failed to update market cap for ${dataset.name}:`, error.message);
-      }
+        if (error instanceof Error) {
+          console.error(`Failed to update market cap for ${dataset.name}:`, error.message);
+        } else {
+          console.error(`Failed to update market cap for ${dataset.name}:`, error);
+        }      }
     }
   }
 }

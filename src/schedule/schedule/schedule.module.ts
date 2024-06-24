@@ -1,9 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import { AccessRequestsModule } from 'src/modules/access-requests/access-requests.module';
+import { AccessRequestsModule } from '../../modules/access-requests/access-requests.module';
 import { TasksService } from './tasks.service';
 import { TasksController } from './tasks.controller';
-import { DatasetsModule } from 'src/modules/datasets/datasets.module';
+import { DatasetsModule } from '../../modules/datasets/datasets.module';
 
 @Module({
   imports: [

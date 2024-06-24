@@ -6,11 +6,11 @@ export class ConfigService {
   constructor(private configService: NestConfigService) {}
 
   get(key: string): string {
-    return this.configService.get<string>(key);
+    return this.configService.get<string>(key) as string;
   }
 
   getDatabaseUser(): string {
-    return this.configService.get<string>('DB_USER');
+    return this.configService.get<string>('DB_USER') as string;
   }
 
 }

@@ -3,8 +3,21 @@ import { InjectModel } from '@nestjs/sequelize';
 import { AccessRequest } from '../../../models/access-request.model';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
-import { NotificationsService } from 'src/modules/notifications/services/notifications.service';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 import { Op } from 'sequelize';
+import { Attributes } from 'sequelize/types';
+
+interface AccessRequestAttributes extends Attributes<AccessRequest> {
+  user_id: number;
+  dataset_id: number;
+  frequency: string;
+  status: string;
+  requested_at: Date | null;
+  resolved_at: Date | null;
+  expiry_date: Date | null;
+  is_temporary: boolean;
+}
+
 
 @Injectable()
 export class AccessRequestsService {
@@ -14,30 +27,31 @@ export class AccessRequestsService {
     private notificationsService: NotificationsService
   ) {}
 
-  async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
-    const { user_id, dataset_id, frequency, requested_at, resolved_at, expiry_date, is_temporary } = createAccessRequestDto;
-    
-    const accessRequest = new AccessRequest({
-        user_id,
-        dataset_id,
-        frequency,
-        status: 'pending',
-        requested_at: requested_at ? new Date(requested_at) : new Date(),
-        resolved_at: resolved_at ? new Date(resolved_at) : null,
-        expiry_date: expiry_date ? new Date(expiry_date) : null,
-        is_temporary: is_temporary ?? false,
-      });
+  // async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
+  //   const { user_id, dataset_id, frequency, requested_at, resolved_at, expiry_date, is_temporary } = createAccessRequestDto;
 
-    const savedAccessRequest = await accessRequest.save();
+  //   const accessRequestData: AccessRequestAttributes = {
+  //     user_id: createAccessRequestDto.user_id,
+  //     dataset_id: createAccessRequestDto.dataset_id,
+  //     frequency: createAccessRequestDto.frequency,
+  //     status: createAccessRequestDto.status,
+  //     requested_at: createAccessRequestDto.requested_at ?? new Date(),
+  //     resolved_at: createAccessRequestDto.resolved_at ?? null,
+  //     expiry_date: createAccessRequestDto.expiry_date ?? null,
+  //     is_temporary: createAccessRequestDto.is_temporary ?? false,
+  //   };
 
-    this.notificationsService.sendNotification({
-      type: 'NEW_ACCESS_REQUEST',
-      message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
-      accessRequest: savedAccessRequest
-    });
+  //   const accessRequest = this.accessRequestModel.build(accessRequestData);
+  //   const savedAccessRequest = await accessRequest.save();
 
-    return savedAccessRequest;
-  }
+  //   this.notificationsService.sendNotification({
+  //     type: 'NEW_ACCESS_REQUEST',
+  //     message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
+  //     accessRequest: savedAccessRequest
+  //   });
+
+  //   return savedAccessRequest;
+  // }
 
   async findAll(): Promise<AccessRequest[]> {
     return this.accessRequestModel.findAll();
@@ -48,7 +62,13 @@ export class AccessRequestsService {
   }
 
   async findOne(user_id: number, dataset_id: number, frequency: string): Promise<AccessRequest> {
-    return this.accessRequestModel.findOne({ where: { user_id, dataset_id, frequency } });
+    const accessRequest = await this.accessRequestModel.findOne({
+      where: { user_id, dataset_id, frequency },
+    });
+    if (!accessRequest) {
+      throw new Error('AccessRequest not found');
+    }
+    return accessRequest;
   }
 
   async update(user_id: number, dataset_id: number, frequency: string, status: string, updateAccessRequestDto: UpdateAccessRequestDto): Promise<[number, AccessRequest[]]> {

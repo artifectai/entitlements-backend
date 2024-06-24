@@ -37,9 +37,9 @@ export class AccessRequest extends Model<AccessRequest> {
 
   @Column({
     type: DataType.DATE,
-    allowNull: false,
+    allowNull: true,
   })
-  requested_at: Date;
+  requested_at: Date | null;
 
   @Column({
     type: DataType.DATE,
@@ -52,7 +52,6 @@ export class AccessRequest extends Model<AccessRequest> {
     allowNull: true,
   })
   expiry_date: Date | null;
-
 
   @Column({
     type: DataType.BOOLEAN,
