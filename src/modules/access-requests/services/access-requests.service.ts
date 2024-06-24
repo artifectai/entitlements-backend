@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AccessRequest } from '../../../models/access-request.model';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
@@ -26,46 +26,42 @@ export class AccessRequestsService {
   ) {}
 
   async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
-    const {
-      userId,
-      datasetId,
-      frequencyId,
-      status,
-      requestedAt,
-      resolvedAt,
-      expiryDate,
-      isTemporary,
-    } = createAccessRequestDto;
-
     const accessRequestData: CreateAccessRequestAttributes = {
-      userId,
-      datasetId,
-      frequencyId,
-      status,
-      requestedAt: requestedAt ?? new Date(),
-      resolvedAt: resolvedAt ?? null,
-      expiryDate: expiryDate ?? null,
-      isTemporary: isTemporary ?? false,
+      ...createAccessRequestDto,
+      requestedAt: createAccessRequestDto.requestedAt ?? new Date(),
+      resolvedAt: createAccessRequestDto.resolvedAt ?? null,
+      expiryDate: createAccessRequestDto.expiryDate ?? null,
+      isTemporary: createAccessRequestDto.isTemporary ?? false,
     };
 
-    const accessRequest = this.accessRequestModel.build(accessRequestData);
-    const savedAccessRequest = await accessRequest.save();
+    try {
+      const accessRequest = await this.accessRequestModel.create(accessRequestData);
+      await this.notificationsService.sendNotification({
+        type: 'NEW_ACCESS_REQUEST',
+        message: `New access request from user ${accessRequestData.userId} for dataset ${accessRequestData.datasetId} (${accessRequestData.frequencyId})`,
+        accessRequest,
+      });
 
-    this.notificationsService.sendNotification({
-      type: 'NEW_ACCESS_REQUEST',
-      message: `New access request from user ${userId} for dataset ${datasetId} (${frequencyId})`,
-      accessRequest: savedAccessRequest,
-    });
-
-    return savedAccessRequest;
+      return accessRequest;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create access request');
+    }
   }
 
   async findAll(): Promise<AccessRequest[]> {
-    return this.accessRequestModel.findAll();
+    try {
+      return await this.accessRequestModel.findAll();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve access requests');
+    }
   }
 
   async findPendingRequests(): Promise<AccessRequest[]> {
-    return this.accessRequestModel.findAll({ where: { status: 'pending' } });
+    try {
+      return await this.accessRequestModel.findAll({ where: { status: 'pending' } });
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve pending access requests');
+    }
   }
 
   async findOne(userId: string, datasetId: string, frequencyId: string): Promise<AccessRequest> {
@@ -84,58 +80,51 @@ export class AccessRequestsService {
     frequencyId: string,
     status: string,
     updateAccessRequestDto: UpdateAccessRequestDto
-  ): Promise<[number, AccessRequest[]]> {
-    const [affectedCount, affectedRows] = await this.accessRequestModel.update(updateAccessRequestDto, {
-      where: { userId, datasetId, frequencyId },
-      returning: true,
-    });
+  ): Promise<AccessRequest> {
+    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
 
-    if (affectedCount > 0) {
-      const updatedAccessRequest = affectedRows[0];
-      if (status) {
-        updatedAccessRequest.status = status;
-      }
-      if (updateAccessRequestDto.resolvedAt) {
-        updatedAccessRequest.resolvedAt = new Date(updateAccessRequestDto.resolvedAt);
-      }
-      if (updateAccessRequestDto.expiryDate) {
-        updatedAccessRequest.expiryDate = new Date(updateAccessRequestDto.expiryDate);
-      }
-      if (typeof updateAccessRequestDto.isTemporary !== 'undefined') {
-        updatedAccessRequest.isTemporary = updateAccessRequestDto.isTemporary;
-      }
-      await updatedAccessRequest.save();
-
-      this.notificationsService.sendNotification({
-        type: 'ACCESS_REQUEST_UPDATED',
-        message: `Your access request for dataset ${datasetId} and frequency ${frequencyId} has been ${status}.`,
-        accessRequest: updatedAccessRequest,
-      });
-
-      return [affectedCount, [updatedAccessRequest]];
+    if (!accessRequest) {
+      throw new NotFoundException('Access request not found');
     }
 
-    throw new NotFoundException('Access request not found');
+    try {
+      await accessRequest.update({ ...updateAccessRequestDto, status });
+      await this.notificationsService.sendNotification({
+        type: 'ACCESS_REQUEST_UPDATED',
+        message: `Your access request for dataset ${datasetId} and frequency ${frequencyId} has been ${status}.`,
+        accessRequest,
+      });
+
+      return accessRequest;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to update access request');
+    }
   }
 
   async remove(userId: string, datasetId: string, frequencyId: string): Promise<void> {
     const accessRequest = await this.findOne(userId, datasetId, frequencyId);
     if (accessRequest) {
       await accessRequest.destroy();
+    } else {
+      throw new NotFoundException('Access request not found');
     }
   }
 
   async revokeAccess(userId: string, datasetId: string, frequencyId: string): Promise<void> {
     const accessRequest = await this.findOne(userId, datasetId, frequencyId);
     if (accessRequest) {
-      accessRequest.status = 'revoked';
-      await accessRequest.save();
+      try {
+        accessRequest.status = 'revoked';
+        await accessRequest.save();
 
-      this.notificationsService.sendNotification({
-        type: 'ACCESS_REVOKED',
-        message: `Your access for dataset ${datasetId} and frequency ${frequencyId} has been revoked.`,
-        accessRequest,
-      });
+        await this.notificationsService.sendNotification({
+          type: 'ACCESS_REVOKED',
+          message: `Your access for dataset ${datasetId} and frequency ${frequencyId} has been revoked.`,
+          accessRequest,
+        });
+      } catch (error) {
+        throw new InternalServerErrorException('Failed to revoke access request');
+      }
     } else {
       throw new NotFoundException('Access request not found');
     }
@@ -143,23 +132,27 @@ export class AccessRequestsService {
 
   async checkExpiredAccessRequests(): Promise<void> {
     const now = new Date();
-    const expiredRequests = await this.accessRequestModel.findAll({
-      where: {
-        expiryDate: { [Op.lt]: now },
-        status: 'approved',
-        isTemporary: true,
-      },
-    });
-
-    for (const request of expiredRequests) {
-      request.status = 'expired';
-      await request.save();
-
-      this.notificationsService.sendNotification({
-        type: 'ACCESS_EXPIRED',
-        message: `Your temporary access for dataset ${request.datasetId} and frequency ${request.frequencyId} has expired.`,
-        accessRequest: request,
+    try {
+      const expiredRequests = await this.accessRequestModel.findAll({
+        where: {
+          expiryDate: { [Op.lt]: now },
+          status: 'approved',
+          isTemporary: true,
+        },
       });
+
+      for (const request of expiredRequests) {
+        request.status = 'expired';
+        await request.save();
+
+        await this.notificationsService.sendNotification({
+          type: 'ACCESS_EXPIRED',
+          message: `Your temporary access for dataset ${request.datasetId} and frequency ${request.frequencyId} has expired.`,
+          accessRequest: request,
+        });
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to check expired access requests');
     }
   }
 }
