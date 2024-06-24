@@ -1,6 +1,6 @@
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import compression from 'compression';
+import * as compression from 'compression';
 import * as dotenv from 'dotenv';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
