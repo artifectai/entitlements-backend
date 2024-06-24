@@ -5,12 +5,11 @@ import { ConfigService as NestConfigService } from '@nestjs/config';
 export class ConfigService {
   constructor(private configService: NestConfigService) {}
 
-  get(key: string): string {
-    return this.configService.get<string>(key) as string;
+  get(key: string): string | undefined {
+    return this.configService.get<string>(key);
   }
 
-  getDatabaseUser(): string {
-    return this.configService.get<string>('DB_USER') as string;
+  getDatabaseUser(): string | undefined {
+    return this.configService.get<string>('DB_USER');
   }
-
 }

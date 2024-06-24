@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { CustomConfigModule } from './config/config.module';
-import { DatabaseService } from './database/database.service';
+import { DatabaseService } from './database/services/database.service';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { User } from './models/user.model';
 import { Dataset } from './models/dataset.model';
 import { AccessRequest } from './models/access-request.model';
-import { getSequelizeConfig } from './config/sequelize.config';
+import { getSequelizeConfig } from './config/sequelize/sequelize.config';
 import { ConfigService } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
