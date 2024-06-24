@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, InternalServerErrorException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AccessRequestsService } from '../services/access-requests.service';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
@@ -8,54 +8,94 @@ export class AccessRequestsController {
   constructor(private readonly accessRequestsService: AccessRequestsService) {}
 
   @Post()
-  create(@Body() createAccessRequestDto: CreateAccessRequestDto) {
-    return this.accessRequestsService.create(createAccessRequestDto);
+  async create(@Body() createAccessRequestDto: CreateAccessRequestDto) {
+    try {
+      return await this.accessRequestsService.create(createAccessRequestDto);
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to create access request');
+    }
   }
-  
+
   @Get()
-  findAll() {
-    return this.accessRequestsService.findAll();
+  async findAll() {
+    try {
+      return await this.accessRequestsService.findAll();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve access requests');
+    }
   }
 
   @Get('/pending')
-  findPendingRequests() {
-    return this.accessRequestsService.findPendingRequests();
+  async findPendingRequests() {
+    try {
+      return await this.accessRequestsService.findPendingRequests();
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve pending access requests');
+    }
   }
 
   @Get(':userId/:datasetId/:frequencyId')
-  findOne(
+  async findOne(
     @Param('userId') userId: string,
     @Param('datasetId') datasetId: string,
     @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.findOne(userId, datasetId, frequencyId);
+    try {
+      return await this.accessRequestsService.findOne(userId, datasetId, frequencyId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to retrieve access request');
+    }
   }
 
   @Patch(':userId/:datasetId/:frequencyId')
-  update(
+  async update(
     @Param('userId') userId: string,
     @Param('datasetId') datasetId: string,
     @Param('frequencyId') frequencyId: string,
     @Body() updateAccessRequestDto: UpdateAccessRequestDto,
   ) {
-    return this.accessRequestsService.update(userId, datasetId, frequencyId, updateAccessRequestDto.status, updateAccessRequestDto);
+    try {
+      return await this.accessRequestsService.update(userId, datasetId, frequencyId, updateAccessRequestDto.status, updateAccessRequestDto);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to update access request');
+    }
   }
 
   @Patch('revoke/:userId/:datasetId/:frequencyId')
-  revokeAccess(
+  async revokeAccess(
     @Param('userId') userId: string,
     @Param('datasetId') datasetId: string,
     @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.revokeAccess(userId, datasetId, frequencyId);
+    try {
+      return await this.accessRequestsService.revokeAccess(userId, datasetId, frequencyId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to revoke access request');
+    }
   }
 
   @Delete(':userId/:datasetId/:frequencyId')
-  remove(
+  async remove(
     @Param('userId') userId: string,
     @Param('datasetId') datasetId: string,
     @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.remove(userId, datasetId, frequencyId);
+    try {
+      return await this.accessRequestsService.remove(userId, datasetId, frequencyId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Failed to remove access request');
+    }
   }
 }

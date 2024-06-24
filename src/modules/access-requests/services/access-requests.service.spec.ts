@@ -1,201 +1,184 @@
-// import { Op } from 'sequelize';
-// import { Test, TestingModule } from '@nestjs/testing';
-// import { getModelToken } from '@nestjs/sequelize';
-// import { AccessRequestsService } from './access-requests.service';
-// import { AccessRequest } from '../../../models/access-request.model';
-// import { NotificationsService } from '../../notifications/services/notifications.service';
-// import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
-// import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AccessRequestsController } from '../controllers/access-requests.controller';
+import { AccessRequestsService } from '../services/access-requests.service';
+import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
+import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
+import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
 
-// const mockAccessRequest = {
-//   user_id: 1,
-//   dataset_id: 1,
-//   frequency: 'daily',
-//   status: 'pending',
-//   requested_at: new Date(),
-//   resolved_at: null,
-//   expiry_date: null,
-//   is_temporary: false,
-//   save: jest.fn().mockResolvedValue(null),
-//   destroy: jest.fn().mockResolvedValue(null),
-// };
+describe('AccessRequestsController', () => {
+  let controller: AccessRequestsController;
+  let accessRequestsService: AccessRequestsService;
 
-// const mockAccessRequestModel = {
-//   build: jest.fn().mockReturnValue(mockAccessRequest),
-//   save: jest.fn().mockResolvedValue(mockAccessRequest),
-//   findAll: jest.fn().mockResolvedValue([mockAccessRequest]),
-//   findOne: jest.fn().mockResolvedValue(mockAccessRequest),
-//   update: jest.fn().mockResolvedValue([1, [mockAccessRequest]]),
-// };
+  const userId = 'user1';
+  const datasetId = 'dataset1';
+  const frequencyId = 'frequency1';
+  const createDto: CreateAccessRequestDto = {
+    userId,
+    datasetId,
+    frequencyId,
+    status: 'pending',
+    requestedAt: new Date(),
+  };
+  const updateDto: UpdateAccessRequestDto = { status: 'approved' };
+  const createdAccessRequest = { id: '1', ...createDto };
+  const expectedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: 'pending' };
+  const revokedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: 'revoked' };
+  const expectedAccessRequests = [expectedAccessRequest];
 
-// const mockNotificationsService = {
-//   sendNotification: jest.fn(),
-// };
+  beforeEach(async () => {
+    const module: TestingModule = await Test.createTestingModule({
+      controllers: [AccessRequestsController],
+      providers: [
+        {
+          provide: AccessRequestsService,
+          useValue: {
+            create: jest.fn(),
+            findAll: jest.fn(),
+            findPendingRequests: jest.fn(),
+            findOne: jest.fn(),
+            update: jest.fn(),
+            revokeAccess: jest.fn(),
+            remove: jest.fn(),
+          },
+        },
+      ],
+    }).compile();
 
-// describe('AccessRequestsService', () => {
-//   let service: AccessRequestsService;
+    controller = module.get<AccessRequestsController>(AccessRequestsController);
+    accessRequestsService = module.get<AccessRequestsService>(AccessRequestsService);
+  });
 
-//   beforeEach(async () => {
-//     const module: TestingModule = await Test.createTestingModule({
-//       providers: [
-//         AccessRequestsService,
-//         {
-//           provide: getModelToken(AccessRequest),
-//           useValue: mockAccessRequestModel,
-//         },
-//         {
-//           provide: NotificationsService,
-//           useValue: mockNotificationsService,
-//         },
-//       ],
-//     }).compile();
+  it('should be defined', () => {
+    expect(controller).toBeDefined();
+  });
 
-//     service = module.get<AccessRequestsService>(AccessRequestsService);
-//   });
+  describe('create', () => {
+    it('should create an access request', async () => {
+      jest.spyOn(accessRequestsService, 'create').mockResolvedValue(createdAccessRequest as any);
 
-//   it('should be defined', () => {
-//     expect(service).toBeDefined();
-//   });
+      const result = await controller.create(createDto);
+      expect(result).toEqual(createdAccessRequest);
+    });
 
-//   describe('create', () => {
-//     it('should create an access request', async () => {
-//       const dto: CreateAccessRequestDto = {
-//         user_id: 1,
-//         dataset_id: 1,
-//         frequency: 'daily',
-//         status: 'pending',
-//         requested_at: new Date(),
-//         resolved_at: null,
-//         expiry_date: null,
-//         is_temporary: false,
-//       };
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'create').mockRejectedValue(new Error('Service error'));
 
-//       // Set up the mock to return the correct value when save is called
-//       mockAccessRequest.save.mockResolvedValueOnce(mockAccessRequest);
+      await expect(controller.create(createDto)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//       const result = await service.create(dto);
+  describe('findAll', () => {
+    it('should return an array of access requests', async () => {
+      jest.spyOn(accessRequestsService, 'findAll').mockResolvedValue(expectedAccessRequests as any);
 
-//       expect(mockAccessRequestModel.build).toHaveBeenCalledWith(dto);
-//       expect(mockAccessRequest.save).toHaveBeenCalled();
-//       expect(mockNotificationsService.sendNotification).toHaveBeenCalledWith({
-//         type: 'NEW_ACCESS_REQUEST',
-//         message: `New access request from user 1 for dataset 1 (daily)`,
-//         accessRequest: mockAccessRequest,
-//       });
-//       expect(result).toEqual(mockAccessRequest);
-//     });
-//   });
+      const result = await controller.findAll();
+      expect(result).toEqual(expectedAccessRequests);
+    });
 
-//   describe('findAll', () => {
-//     it('should return all access requests', async () => {
-//       const result = await service.findAll();
-//       expect(result).toEqual([mockAccessRequest]);
-//       expect(mockAccessRequestModel.findAll).toHaveBeenCalled();
-//     });
-//   });
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'findAll').mockRejectedValue(new Error('Service error'));
 
-//   describe('findPendingRequests', () => {
-//     it('should return all pending access requests', async () => {
-//       const result = await service.findPendingRequests();
-//       expect(result).toEqual([mockAccessRequest]);
-//       expect(mockAccessRequestModel.findAll).toHaveBeenCalledWith({ where: { status: 'pending' } });
-//     });
-//   });
+      await expect(controller.findAll()).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//   describe('findOne', () => {
-//     it('should return a single access request', async () => {
-//       const result = await service.findOne(1, 1, 'daily');
-//       expect(result).toEqual(mockAccessRequest);
-//       expect(mockAccessRequestModel.findOne).toHaveBeenCalledWith({
-//         where: { user_id: 1, dataset_id: 1, frequency: 'daily' },
-//       });
-//     });
+  describe('findPendingRequests', () => {
+    it('should return an array of pending access requests', async () => {
+      jest.spyOn(accessRequestsService, 'findPendingRequests').mockResolvedValue(expectedAccessRequests as any);
 
-//     it('should throw a NotFoundException if access request not found', async () => {
-//       mockAccessRequestModel.findOne.mockResolvedValueOnce(null);
-//       await expect(service.findOne(1, 1, 'daily')).rejects.toThrow('Access request not found');
-//     });
-//   });
+      const result = await controller.findPendingRequests();
+      expect(result).toEqual(expectedAccessRequests);
+    });
 
-//   describe('update', () => {
-//     it('should update an access request', async () => {
-//       const dto: UpdateAccessRequestDto = {
-//         status: 'approved',
-//       };
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'findPendingRequests').mockRejectedValue(new Error('Service error'));
 
-//       const result = await service.update(1, 1, 'daily', 'approved', dto);
+      await expect(controller.findPendingRequests()).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//       expect(result).toEqual([1, [mockAccessRequest]]);
-//       expect(mockAccessRequestModel.update).toHaveBeenCalledWith(dto, {
-//         where: { user_id: 1, dataset_id: 1, frequency: 'daily' },
-//         returning: true,
-//       });
-//       expect(mockNotificationsService.sendNotification).toHaveBeenCalledWith({
-//         type: 'ACCESS_REQUEST_UPDATED',
-//         message: `Your access request for dataset 1 and frequency daily has been approved.`,
-//         accessRequest: mockAccessRequest,
-//       });
-//     });
+  describe('findOne', () => {
+    it('should return an access request if found', async () => {
+      jest.spyOn(accessRequestsService, 'findOne').mockResolvedValue(expectedAccessRequest as any);
 
-//     it('should throw a NotFoundException if access request not found', async () => {
-//       mockAccessRequestModel.update.mockResolvedValueOnce([0, []]);
-//       const dto: UpdateAccessRequestDto = {
-//         status: 'approved',
-//       };
-//       await expect(service.update(1, 1, 'daily', 'approved', dto)).rejects.toThrow('Access request not found');
-//     });
-//   });
+      const result = await controller.findOne(userId, datasetId, frequencyId);
+      expect(result).toEqual(expectedAccessRequest);
+    });
 
-//   describe('remove', () => {
-//     it('should remove an access request', async () => {
-//       await service.remove(1, 1, 'daily');
-//       expect(mockAccessRequestModel.findOne).toHaveBeenCalledWith({
-//         where: { user_id: 1, dataset_id: 1, frequency: 'daily' },
-//       });
-//       expect(mockAccessRequest.destroy).toHaveBeenCalled();
-//     });
-//   });
+    it('should throw NotFoundException if access request is not found', async () => {
+      jest.spyOn(accessRequestsService, 'findOne').mockRejectedValue(new NotFoundException());
 
-//   describe('revokeAccess', () => {
-//     it('should revoke an access request', async () => {
-//       await service.revokeAccess(1, 1, 'daily');
-//       expect(mockAccessRequestModel.findOne).toHaveBeenCalledWith({
-//         where: { user_id: 1, dataset_id: 1, frequency: 'daily' },
-//       });
-//       expect(mockAccessRequest.save).toHaveBeenCalled();
-//       expect(mockNotificationsService.sendNotification).toHaveBeenCalledWith({
-//         type: 'ACCESS_REVOKED',
-//         message: `Your access for dataset 1 and frequency daily has been revoked.`,
-//         accessRequest: mockAccessRequest,
-//       });
-//     });
+      await expect(controller.findOne(userId, datasetId, frequencyId)).rejects.toThrow(NotFoundException);
+    });
 
-//     it('should throw a NotFoundException if access request not found', async () => {
-//       mockAccessRequestModel.findOne.mockResolvedValueOnce(null);
-//       await expect(service.revokeAccess(1, 1, 'daily')).rejects.toThrow('Access request not found');
-//     });
-//   });
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'findOne').mockRejectedValue(new Error('Service error'));
 
-//   describe('checkExpiredAccessRequests', () => {
-//     it('should check and expire access requests', async () => {
-//       const expiredRequest = { ...mockAccessRequest, expiry_date: new Date(Date.now() - 1000) };
-//       mockAccessRequestModel.findAll.mockResolvedValueOnce([expiredRequest]);
+      await expect(controller.findOne(userId, datasetId, frequencyId)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
 
-//       await service.checkExpiredAccessRequests();
+  describe('update', () => {
+    it('should update an access request', async () => {
+      const updatedAccessRequest = { id: '1', userId, datasetId, frequencyId, ...updateDto };
+      jest.spyOn(accessRequestsService, 'update').mockResolvedValue(updatedAccessRequest as any);
 
-//       expect(mockAccessRequestModel.findAll).toHaveBeenCalledWith({
-//         where: {
-//           expiry_date: { [Op.lt]: new Date() },
-//           status: 'approved',
-//           is_temporary: true,
-//         },
-//       });
-//       expect(expiredRequest.save).toHaveBeenCalled();
-//       expect(mockNotificationsService.sendNotification).toHaveBeenCalledWith({
-//         type: 'ACCESS_EXPIRED',
-//         message: `Your temporary access for dataset 1 and frequency daily has expired.`,
-//         accessRequest: expiredRequest,
-//       });
-//     });
-//   });
-// });
+      const result = await controller.update(userId, datasetId, frequencyId, updateDto);
+      expect(result).toEqual(updatedAccessRequest);
+    });
+
+    it('should throw NotFoundException if access request is not found', async () => {
+      jest.spyOn(accessRequestsService, 'update').mockRejectedValue(new NotFoundException());
+
+      await expect(controller.update(userId, datasetId, frequencyId, updateDto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'update').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.update(userId, datasetId, frequencyId, updateDto)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('revokeAccess', () => {
+    it('should revoke access', async () => {
+      jest.spyOn(accessRequestsService, 'revokeAccess').mockResolvedValue(revokedAccessRequest as any);
+
+      const result = await controller.revokeAccess(userId, datasetId, frequencyId);
+      expect(result).toEqual(revokedAccessRequest);
+    });
+
+    it('should throw NotFoundException if access request is not found', async () => {
+      jest.spyOn(accessRequestsService, 'revokeAccess').mockRejectedValue(new NotFoundException());
+
+      await expect(controller.revokeAccess(userId, datasetId, frequencyId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'revokeAccess').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.revokeAccess(userId, datasetId, frequencyId)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove an access request', async () => {
+      jest.spyOn(accessRequestsService, 'remove').mockResolvedValue(undefined);
+
+      const result = await controller.remove(userId, datasetId, frequencyId);
+      expect(result).toBeUndefined();
+    });
+
+    it('should throw NotFoundException if access request is not found', async () => {
+      jest.spyOn(accessRequestsService, 'remove').mockRejectedValue(new NotFoundException());
+
+      await expect(controller.remove(userId, datasetId, frequencyId)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw InternalServerErrorException if service throws an error', async () => {
+      jest.spyOn(accessRequestsService, 'remove').mockRejectedValue(new Error('Service error'));
+
+      await expect(controller.remove(userId, datasetId, frequencyId)).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+});
