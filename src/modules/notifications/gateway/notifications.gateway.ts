@@ -1,6 +1,7 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
+import { Notification } from '../notifications.module'
 
 @WebSocketGateway({
   cors: {
@@ -12,7 +13,7 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
   private logger: Logger = new Logger('NotificationsGateway');
 
   afterInit(server: Server) {
-    this.logger.log('Init');
+    this.logger.log('WebSocket server initialized');
   }
 
   handleDisconnect(client: Socket) {
@@ -25,14 +26,12 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
 
   @SubscribeMessage('messageToServer')
   handleMessage(client: Socket, payload: any): void {
-    this.logger.log(`Message from client ${client.id}: ${payload}`);
+    this.logger.log(`Message from client ${client.id}: ${JSON.stringify(payload)}`);
     this.server.emit('messageToClient', payload);
   }
 
-  sendNotification(notification: any) {
-    this.logger.log('Sending notification:', notification);
+  sendNotification(notification: Notification) {
+    this.logger.log(`Sending notification: ${JSON.stringify(notification)}`);
     this.server.emit('notification', notification);
   }
 }
-
-
