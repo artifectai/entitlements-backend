@@ -32,7 +32,6 @@ import { NotificationsGateway } from './modules/notifications/gateway/notificati
     ScheduleTasksModule,
     NotificationsModule
   ],
-  // providers: [DatabaseService]
   providers: [DatabaseService, NotificationsService, NotificationsGateway],
 
 })
