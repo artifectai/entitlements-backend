@@ -27,31 +27,31 @@ export class AccessRequestsService {
     private notificationsService: NotificationsService
   ) {}
 
-  async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
-    const { user_id, dataset_id, frequency, requested_at, resolved_at, expiry_date, is_temporary } = createAccessRequestDto;
+  // async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
+  //   const { user_id, dataset_id, frequency, requested_at, resolved_at, expiry_date, is_temporary } = createAccessRequestDto;
 
-    const accessRequestData: AccessRequestAttributes = {
-      user_id: createAccessRequestDto.user_id,
-      dataset_id: createAccessRequestDto.dataset_id,
-      frequency: createAccessRequestDto.frequency,
-      status: createAccessRequestDto.status,
-      requested_at: createAccessRequestDto.requested_at ?? new Date(),
-      resolved_at: createAccessRequestDto.resolved_at ?? null,
-      expiry_date: createAccessRequestDto.expiry_date ?? null,
-      is_temporary: createAccessRequestDto.is_temporary ?? false,
-    };
+  //   const accessRequestData: AccessRequestAttributes = {
+  //     user_id: createAccessRequestDto.user_id,
+  //     dataset_id: createAccessRequestDto.dataset_id,
+  //     frequency: createAccessRequestDto.frequency,
+  //     status: createAccessRequestDto.status,
+  //     requested_at: createAccessRequestDto.requested_at ?? new Date(),
+  //     resolved_at: createAccessRequestDto.resolved_at ?? null,
+  //     expiry_date: createAccessRequestDto.expiry_date ?? null,
+  //     is_temporary: createAccessRequestDto.is_temporary ?? false,
+  //   };
 
-    const accessRequest = this.accessRequestModel.build(accessRequestData);
-    const savedAccessRequest = await accessRequest.save();
+  //   const accessRequest = this.accessRequestModel.build(accessRequestData);
+  //   const savedAccessRequest = await accessRequest.save();
 
-    this.notificationsService.sendNotification({
-      type: 'NEW_ACCESS_REQUEST',
-      message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
-      accessRequest: savedAccessRequest
-    });
+  //   this.notificationsService.sendNotification({
+  //     type: 'NEW_ACCESS_REQUEST',
+  //     message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
+  //     accessRequest: savedAccessRequest
+  //   });
 
-    return savedAccessRequest;
-  }
+  //   return savedAccessRequest;
+  // }
 
   async findAll(): Promise<AccessRequest[]> {
     return this.accessRequestModel.findAll();

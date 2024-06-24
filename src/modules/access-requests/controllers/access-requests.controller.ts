@@ -7,10 +7,10 @@ import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
 export class AccessRequestsController {
   constructor(private readonly accessRequestsService: AccessRequestsService) {}
 
-  @Post()
-  create(@Body() createAccessRequestDto: CreateAccessRequestDto) {
-    return this.accessRequestsService.create(createAccessRequestDto);
-  }
+  // @Post()
+  // create(@Body() createAccessRequestDto: CreateAccessRequestDto) {
+  //   return this.accessRequestsService.create(createAccessRequestDto);
+  // }
   
   @Get()
   findAll() {
