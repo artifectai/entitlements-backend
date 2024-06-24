@@ -25,7 +25,7 @@ export class DatasetsController {
   async getDataset(
     @Param('name') name: string,
     @Param('frequency') frequency: string,
-    @Param('user_id') user_id: string
+    @Param('user_id') user_id: number
     ): Promise<any> {
     return this.datasetsService.getDatasetData(name, frequency, user_id);
   }

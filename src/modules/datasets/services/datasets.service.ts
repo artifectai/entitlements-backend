@@ -27,7 +27,7 @@ export class DatasetsService {
     return pricingData;
   }
 
-  async getDatasetData(name: string, frequency: string, user_id: string): Promise<any> {
+  async getDatasetData(name: string, frequency: string, user_id: number): Promise<any> {
     const nameToIdMap: { [key: string]: string } = {
       bitcoin: 'bitcoin',
       ethereum: 'ethereum',
