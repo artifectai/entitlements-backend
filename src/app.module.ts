@@ -12,7 +12,7 @@ import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
 import { DatasetsModule } from './modules/datasets/datasets.module';
 import { AccessRequestsModule } from './modules/access-requests/access-requests.module';
-import { ScheduleTasksModule } from './schedule/schedule.module';
+import { ScheduleTasksModule } from './common/schedule/schedule.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { NotificationsService } from './modules/notifications/services/notifications.service';
 import { NotificationsGateway } from './modules/notifications/gateway/notifications.gateway';

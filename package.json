@@ -14,7 +14,7 @@
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "jest",
-    "test:services": "jest ./src/modules/notifications/services/notifications.service.spec.ts",
+    "test:services": "jest ./src/common/schedule/tasks.service.spec.ts",
     "test:controllers": "jest ./src/modules/notifications/gateway/notifications.gateway.spec.ts",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
