@@ -28,12 +28,13 @@ export class DatasetsService {
   }
 
   async getDatasetData(name: string, frequency: string, user_id: string): Promise<any> {
-    const nameToIdMap = {
+    const nameToIdMap: { [key: string]: string } = {
       bitcoin: 'bitcoin',
       ethereum: 'ethereum',
     };
-
+    
     const baseId = nameToIdMap[name.toLowerCase()];
+    
     if (!baseId) {
       throw new Error('Invalid dataset name');
     }

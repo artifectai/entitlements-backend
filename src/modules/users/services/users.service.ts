@@ -1,44 +1,45 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { JwtService } from '@nestjs/jwt';
 import { User } from '../../../models/user.model';
-import { CreateUserDto } from '../dto/create-user.dto';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User)
     private userModel: typeof User,
+    private jwtService: JwtService,
   ) {}
 
-  async createUser(createUserDto: CreateUserDto): Promise<User> {
-    const user = new User();
-    user.email = createUserDto.email;
-    user.role = createUserDto.role;
-    user.api_key = `api_key_${createUserDto.role.toLowerCase()}_${uuidv4()}`;
-    user.first_name = createUserDto.first_name;
-    user.last_name = createUserDto.last_name;
-    return user.save();
-  }
-
-  async findByApiKey(api_key: string): Promise<User> {
-    return this.userModel.findOne({ where: { api_key } });
-  }
-
   async findAll(): Promise<User[]> {
-    return this.userModel.findAll();
+    return await this.userModel.findAll();
   }
 
-  async findOne(id: string): Promise<User> {
-    return this.userModel.findOne({ where: { id } });
+  async findByApiKey(api_key: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ where: { api_key } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    return user;
   }
 
-  async findByEmail(email: string): Promise<User> {
-    return this.userModel.findOne({ where: { email } });
+  async generateToken(api_key: string): Promise<string> {
+    const user = await this.userModel.findOne({ where: { api_key } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const payload = { api_key: user.api_key, sub: user.id };
+    return this.jwtService.sign(payload);
   }
 
-  async remove(id: string): Promise<void> {
-    const user = await this.findOne(id);
-    await user.destroy();
+  async validateToken(token: string): Promise<User | null> {
+    try {
+      const decoded = this.jwtService.verify(token);
+      return this.findByApiKey(decoded.api_key);
+    } catch (error) {
+      throw new Error('Invalid or expired token');
+    }
   }
+  
 }

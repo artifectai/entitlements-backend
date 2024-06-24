@@ -1,5 +1,4 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { AccessRequest } from '../models/access-request.model';
+import { Table, Column, Model, DataType, PrimaryKey, AutoIncrement } from 'sequelize-typescript';
 
 @Table({
     tableName: 'users', 
@@ -7,6 +6,11 @@ import { AccessRequest } from '../models/access-request.model';
     timestamps: false
 })
 export class User extends Model<User> {
+  @PrimaryKey
+  @AutoIncrement
+  @Column
+  id: number;
+
   @Column({
     type: DataType.STRING,
     allowNull: false,
@@ -17,26 +21,11 @@ export class User extends Model<User> {
     type: DataType.STRING,
     allowNull: false,
   })
-  email: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false,
-  })
   role: string;
 
   @Column({
-    type: DataType.STRING, 
+    type: DataType.DATE,
     allowNull: false,
   })
-  first_name: string;
-
-  @Column({
-    type: DataType.STRING, 
-    allowNull: false,
-  })
-  last_name: string;
-
-  @HasMany(() => AccessRequest)
-  accessRequests: AccessRequest[];
+  created_at: Date;
 }
