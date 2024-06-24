@@ -7,14 +7,14 @@ import { NotificationsService } from '../../notifications/services/notifications
 import { Op } from 'sequelize';
 
 interface CreateAccessRequestAttributes {
-  user_id: number;
-  dataset_id: number;
-  frequency: string;
+  userId: string;
+  datasetId: string;
+  frequencyId: string;
   status: string;
-  requested_at: Date;
-  resolved_at: Date | null;
-  expiry_date: Date | null;
-  is_temporary: boolean;
+  requestedAt: Date;
+  resolvedAt: Date | null;
+  expiryDate: Date | null;
+  isTemporary: boolean;
 }
 
 @Injectable()
@@ -27,25 +27,25 @@ export class AccessRequestsService {
 
   async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
     const {
-      user_id,
-      dataset_id,
-      frequency,
+      userId,
+      datasetId,
+      frequencyId,
       status,
-      requested_at,
-      resolved_at,
-      expiry_date,
-      is_temporary,
+      requestedAt,
+      resolvedAt,
+      expiryDate,
+      isTemporary,
     } = createAccessRequestDto;
 
     const accessRequestData: CreateAccessRequestAttributes = {
-      user_id,
-      dataset_id,
-      frequency,
+      userId,
+      datasetId,
+      frequencyId,
       status,
-      requested_at: requested_at ?? new Date(),
-      resolved_at: resolved_at ?? null,
-      expiry_date: expiry_date ?? null,
-      is_temporary: is_temporary ?? false,
+      requestedAt: requestedAt ?? new Date(),
+      resolvedAt: resolvedAt ?? null,
+      expiryDate: expiryDate ?? null,
+      isTemporary: isTemporary ?? false,
     };
 
     const accessRequest = this.accessRequestModel.build(accessRequestData);
@@ -53,7 +53,7 @@ export class AccessRequestsService {
 
     this.notificationsService.sendNotification({
       type: 'NEW_ACCESS_REQUEST',
-      message: `New access request from user ${user_id} for dataset ${dataset_id} (${frequency})`,
+      message: `New access request from user ${userId} for dataset ${datasetId} (${frequencyId})`,
       accessRequest: savedAccessRequest,
     });
 
@@ -68,9 +68,9 @@ export class AccessRequestsService {
     return this.accessRequestModel.findAll({ where: { status: 'pending' } });
   }
 
-  async findOne(user_id: number, dataset_id: number, frequency: string): Promise<AccessRequest> {
+  async findOne(userId: string, datasetId: string, frequencyId: string): Promise<AccessRequest> {
     const accessRequest = await this.accessRequestModel.findOne({
-      where: { user_id, dataset_id, frequency },
+      where: { userId, datasetId, frequencyId },
     });
     if (!accessRequest) {
       throw new NotFoundException('Access request not found');
@@ -79,14 +79,14 @@ export class AccessRequestsService {
   }
 
   async update(
-    user_id: number,
-    dataset_id: number,
-    frequency: string,
+    userId: string,
+    datasetId: string,
+    frequencyId: string,
     status: string,
     updateAccessRequestDto: UpdateAccessRequestDto
   ): Promise<[number, AccessRequest[]]> {
     const [affectedCount, affectedRows] = await this.accessRequestModel.update(updateAccessRequestDto, {
-      where: { user_id, dataset_id, frequency },
+      where: { userId, datasetId, frequencyId },
       returning: true,
     });
 
@@ -95,20 +95,20 @@ export class AccessRequestsService {
       if (status) {
         updatedAccessRequest.status = status;
       }
-      if (updateAccessRequestDto.resolved_at) {
-        updatedAccessRequest.resolved_at = new Date(updateAccessRequestDto.resolved_at);
+      if (updateAccessRequestDto.resolvedAt) {
+        updatedAccessRequest.resolvedAt = new Date(updateAccessRequestDto.resolvedAt);
       }
-      if (updateAccessRequestDto.expiry_date) {
-        updatedAccessRequest.expiry_date = new Date(updateAccessRequestDto.expiry_date);
+      if (updateAccessRequestDto.expiryDate) {
+        updatedAccessRequest.expiryDate = new Date(updateAccessRequestDto.expiryDate);
       }
-      if (typeof updateAccessRequestDto.is_temporary !== 'undefined') {
-        updatedAccessRequest.is_temporary = updateAccessRequestDto.is_temporary;
+      if (typeof updateAccessRequestDto.isTemporary !== 'undefined') {
+        updatedAccessRequest.isTemporary = updateAccessRequestDto.isTemporary;
       }
       await updatedAccessRequest.save();
 
       this.notificationsService.sendNotification({
         type: 'ACCESS_REQUEST_UPDATED',
-        message: `Your access request for dataset ${dataset_id} and frequency ${frequency} has been ${status}.`,
+        message: `Your access request for dataset ${datasetId} and frequency ${frequencyId} has been ${status}.`,
         accessRequest: updatedAccessRequest,
       });
 
@@ -118,22 +118,22 @@ export class AccessRequestsService {
     throw new NotFoundException('Access request not found');
   }
 
-  async remove(user_id: number, dataset_id: number, frequency: string): Promise<void> {
-    const accessRequest = await this.findOne(user_id, dataset_id, frequency);
+  async remove(userId: string, datasetId: string, frequencyId: string): Promise<void> {
+    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
     if (accessRequest) {
       await accessRequest.destroy();
     }
   }
 
-  async revokeAccess(user_id: number, dataset_id: number, frequency: string): Promise<void> {
-    const accessRequest = await this.findOne(user_id, dataset_id, frequency);
+  async revokeAccess(userId: string, datasetId: string, frequencyId: string): Promise<void> {
+    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
     if (accessRequest) {
       accessRequest.status = 'revoked';
       await accessRequest.save();
 
       this.notificationsService.sendNotification({
         type: 'ACCESS_REVOKED',
-        message: `Your access for dataset ${dataset_id} and frequency ${frequency} has been revoked.`,
+        message: `Your access for dataset ${datasetId} and frequency ${frequencyId} has been revoked.`,
         accessRequest,
       });
     } else {
@@ -145,9 +145,9 @@ export class AccessRequestsService {
     const now = new Date();
     const expiredRequests = await this.accessRequestModel.findAll({
       where: {
-        expiry_date: { [Op.lt]: now },
+        expiryDate: { [Op.lt]: now },
         status: 'approved',
-        is_temporary: true,
+        isTemporary: true,
       },
     });
 
@@ -157,7 +157,7 @@ export class AccessRequestsService {
 
       this.notificationsService.sendNotification({
         type: 'ACCESS_EXPIRED',
-        message: `Your temporary access for dataset ${request.dataset_id} and frequency ${request.frequency} has expired.`,
+        message: `Your temporary access for dataset ${request.datasetId} and frequency ${request.frequencyId} has expired.`,
         accessRequest: request,
       });
     }

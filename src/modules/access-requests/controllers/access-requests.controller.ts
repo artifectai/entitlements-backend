@@ -22,42 +22,40 @@ export class AccessRequestsController {
     return this.accessRequestsService.findPendingRequests();
   }
 
-  @Get(':user_id/:dataset_id/:frequency')
+  @Get(':userId/:datasetId/:frequencyId')
   findOne(
-    @Param('user_id') user_id: number,
-    @Param('dataset_id') dataset_id: number,
-    @Param('frequency') frequency: string,
+    @Param('userId') userId: string,
+    @Param('datasetId') datasetId: string,
+    @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.findOne(user_id, dataset_id, frequency);
+    return this.accessRequestsService.findOne(userId, datasetId, frequencyId);
   }
 
-  @Patch(':user_id/:dataset_id/:frequency')
+  @Patch(':userId/:datasetId/:frequencyId')
   update(
-    @Param('user_id') user_id: number,
-    @Param('dataset_id') dataset_id: number,
-    @Param('frequency') frequency: string,
-    @Param('status') status: string,
+    @Param('userId') userId: string,
+    @Param('datasetId') datasetId: string,
+    @Param('frequencyId') frequencyId: string,
     @Body() updateAccessRequestDto: UpdateAccessRequestDto,
   ) {
-    return this.accessRequestsService.update(user_id, dataset_id, frequency, status, updateAccessRequestDto);
+    return this.accessRequestsService.update(userId, datasetId, frequencyId, updateAccessRequestDto.status, updateAccessRequestDto);
   }
 
-  @Patch('revoke/:user_id/:dataset_id/:frequency')
+  @Patch('revoke/:userId/:datasetId/:frequencyId')
   revokeAccess(
-    @Param('user_id') user_id: number,
-    @Param('dataset_id') dataset_id: number,
-    @Param('frequency') frequency: string,
+    @Param('userId') userId: string,
+    @Param('datasetId') datasetId: string,
+    @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.revokeAccess(user_id, dataset_id, frequency);
+    return this.accessRequestsService.revokeAccess(userId, datasetId, frequencyId);
   }
 
-  @Delete(':user_id/:dataset_id/:frequency')
+  @Delete(':userId/:datasetId/:frequencyId')
   remove(
-    @Param('user_id') user_id: number,
-    @Param('dataset_id') dataset_id: number,
-    @Param('frequency') frequency: string,
+    @Param('userId') userId: string,
+    @Param('datasetId') datasetId: string,
+    @Param('frequencyId') frequencyId: string,
   ) {
-    return this.accessRequestsService.remove(user_id, dataset_id, frequency);
+    return this.accessRequestsService.remove(userId, datasetId, frequencyId);
   }
-  
 }

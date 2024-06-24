@@ -1,68 +1,83 @@
-import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { User } from './user.model';
+import { Table, Column, Model, DataType, ForeignKey, Index } from 'sequelize-typescript';
 import { Dataset } from './dataset.model';
+import { Frequency } from './frequency.model';
+import { User } from './user.model';
 
 @Table({
-  tableName: 'access_requests', 
-  schema: 'public', 
-  timestamps: false,
+  tableName: 'access_requests',
+  schema: 'public',
+  timestamps: false, 
   indexes: [
     {
       unique: true,
-      fields: ['user_id', 'dataset_id', 'frequency'],
+      fields: ['user_id', 'dataset_id', 'frequency_id'],
     },
   ]
 })
-
 export class AccessRequest extends Model<AccessRequest> {
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true,
+  })
+  id: string;
+
   @ForeignKey(() => User)
-  @Column
-  user_id: number;
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'user_id'
+  })
+  userId: string;
 
   @ForeignKey(() => Dataset)
-  @Column
-  dataset_id: number;
-
   @Column({
-    type: DataType.STRING,
+    type: DataType.UUID,
     allowNull: false,
+    field: 'dataset_id'
   })
-  frequency: string;
+  datasetId: string;
+
+  @ForeignKey(() => Frequency)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false,
+    field: 'frequency_id'
+  })
+  frequencyId: string;
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
+    allowNull: false
   })
   status: string;
 
   @Column({
     type: DataType.DATE,
-    allowNull: true,
+    allowNull: false,
+    field: 'requested_at'
   })
-  requested_at: Date | null;
+  requestedAt: Date;
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
+    field: 'resolved_at'
   })
-  resolved_at: Date | null;
+  resolvedAt: Date;
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
+    field: 'expiry_date'
   })
-  expiry_date: Date | null;
+  expiryDate: Date;
 
   @Column({
     type: DataType.BOOLEAN,
-    defaultValue: false,
     allowNull: false,
+    defaultValue: false,
+    field: 'is_temporary'
   })
-  is_temporary: boolean;
-
-  @BelongsTo(() => User)
-  user: User;
-
-  @BelongsTo(() => Dataset)
-  dataset: Dataset;
+  isTemporary: boolean;
 }

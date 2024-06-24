@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query } from '@nestjs/common';
 import { DatasetsService } from '../services/datasets.service';
 import { Dataset } from '../../../models/dataset.model';
 
@@ -13,7 +13,7 @@ export class DatasetsController {
 
   @Get(':symbol')
   async findBySymbol(@Param('symbol') symbol: string): Promise<Dataset[]> { 
-    return this.datasetsService.findBySymbol(symbol)
+    return this.datasetsService.findBySymbol(symbol);
   }
 
   @Get(':name/pricing')
@@ -25,8 +25,9 @@ export class DatasetsController {
   async getDataset(
     @Param('name') name: string,
     @Param('frequency') frequency: string,
-    @Param('user_id') user_id: number
-    ): Promise<any> {
-    return this.datasetsService.getDatasetData(name, frequency, user_id);
+    @Query('userId') userId: string
+  ): Promise<any> {
+    return this.datasetsService.getDatasetData(name, frequency, userId);
   }
 }
+

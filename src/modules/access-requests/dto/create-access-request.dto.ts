@@ -1,18 +1,18 @@
-import { IsNotEmpty, IsString, IsInt, IsDate, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsString, IsUUID, IsDate, IsOptional, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateAccessRequestDto {
-  @IsInt()
+  @IsUUID()
   @IsNotEmpty()
-  user_id: number;
+  userId: string;
 
-  @IsInt()
+  @IsUUID()
   @IsNotEmpty()
-  dataset_id: number;
+  datasetId: string;
 
-  @IsString()
+  @IsUUID()
   @IsNotEmpty()
-  frequency: string;
+  frequencyId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -21,19 +21,19 @@ export class CreateAccessRequestDto {
   @IsDate()
   @IsOptional()
   @Type(() => Date)
-  requested_at?: Date;
+  requestedAt?: Date;
 
   @IsDate()
   @IsOptional()
   @Type(() => Date)
-  resolved_at?: Date;
+  resolvedAt?: Date;
 
   @IsDate()
   @IsOptional()
   @Type(() => Date)
-  expiry_date?: Date;
+  expiryDate?: Date;
 
   @IsBoolean()
   @IsOptional()
-  is_temporary?: boolean;
+  isTemporary?: boolean;
 }

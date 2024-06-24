@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../../../models/user.model';
@@ -15,31 +15,30 @@ export class UsersService {
     return await this.userModel.findAll();
   }
 
-  async findByApiKey(api_key: string): Promise<User | null> {
-    const user = await this.userModel.findOne({ where: { api_key } });
+  async findByApiKey(apiKey: string): Promise<User | null> {
+    const user = await this.userModel.findOne({ where: { apiKey } });
     if (!user) {
       throw new NotFoundException('User not found');
     }
     return user;
   }
 
-  async generateToken(api_key: string): Promise<string> {
-    const user = await this.userModel.findOne({ where: { api_key } });
+  async generateToken(apiKey: string): Promise<string> {
+    const user = await this.userModel.findOne({ where: { apiKey } });
     if (!user) {
       throw new Error('User not found');
     }
 
-    const payload = { api_key: user.api_key, sub: user.id };
+    const payload = { apiKey: user.apiKey, sub: user.id };
     return this.jwtService.sign(payload);
   }
 
   async validateToken(token: string): Promise<User | null> {
     try {
       const decoded = this.jwtService.verify(token);
-      return this.findByApiKey(decoded.api_key);
+      return this.findByApiKey(decoded.apiKey);
     } catch (error) {
       throw new Error('Invalid or expired token');
     }
   }
-  
 }
