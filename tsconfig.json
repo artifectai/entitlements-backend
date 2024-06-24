@@ -1,22 +1,21 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es2017",
-    "lib": ["es6", "dom"],
     "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ES2021",
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": "./src",
-    "removeComments": true,
-    "strict": true,
-    "noImplicitAny": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "esModuleInterop": true,
+    "baseUrl": "./",
+    "incremental": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "strictPropertyInitialization": false
-  },
-  "exclude": ["node_modules", "dist", "test"],
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+    "strictNullChecks": false,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "forceConsistentCasingInFileNames": false,
+    "noFallthroughCasesInSwitch": false
+  }
 }
