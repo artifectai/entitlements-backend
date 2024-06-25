@@ -36,10 +36,8 @@ describe('Integration Tests', () => {
     accessRequestModel = moduleFixture.get<typeof AccessRequest>(getModelToken(AccessRequest));
     tasksService = moduleFixture.get<TasksService>(TasksService);
 
-    // Sync models to create tables
     await sequelize.sync({ force: true });
 
-    // Insert required mock data
     await userModel.create({
       id: 'b2227d2e-9c41-4aeb-abfd-0d704463da16',
       apiKey: uuidv4(),
@@ -54,7 +52,7 @@ describe('Integration Tests', () => {
       id: 'd0458a45-7d3a-4bbb-b618-1d06726ea7e7',
       datasetId: '9f135ec5-9bd9-40eb-b3ed-e9f4e0c30d76',
       frequency: 'd1',
-      marketCapUsd: 1000000,  // Provide a value for marketCapUsd
+      marketCapUsd: 1000000,  
     });
     await accessRequestModel.create({
       id: uuidv4(),
@@ -79,7 +77,7 @@ describe('Integration Tests', () => {
         .get('/datasets')
         .expect(200)
         .catch(err => {
-          console.error('Error:', err.response ? err.response.body : err);  // Log the entire error object
+          console.error('Error:', err.response ? err.response.body : err);  
           throw err;
         });
 
@@ -94,16 +92,15 @@ describe('Integration Tests', () => {
   describe('Quant can request access to 1 or more frequencies for a given dataset', () => {
     it('should create an access request', async () => {
       const requestPayload = {
-        userId: uuidv4(), // New user ID
-        datasetId: uuidv4(), // New dataset ID
-        frequencyId: uuidv4(), // New frequency ID
+        userId: uuidv4(),
+        datasetId: uuidv4(), 
+        frequencyId: uuidv4(),
         status: 'pending',
         requestedAt: '2024-06-25T08:00:00.000Z',
         expiryDate: '2024-12-31T23:59:59.000Z',
         isTemporary: true,
       };
 
-      // Create a new user, dataset, and frequency for the access request
       await userModel.create({
         id: requestPayload.userId,
         apiKey: uuidv4(),
@@ -135,7 +132,7 @@ describe('Integration Tests', () => {
         expect(response.body.frequencyId).toBe(requestPayload.frequencyId);
         expect(response.body.status).toBe(requestPayload.status);
       } catch (err) {
-        console.error('Error:', err.response ? err.response.body : err); // Log the entire error object
+        console.error('Error:', err.response ? err.response.body : err); 
         throw err;
       }
     });
@@ -164,7 +161,7 @@ describe('Integration Tests', () => {
         .send(updatePayload)
         .expect(200)
         .catch(err => {
-          console.error('Error:', err.response ? err.response.body : err);  // Log the entire error object
+          console.error('Error:', err.response ? err.response.body : err); 
           throw err;
         });
 
@@ -176,10 +173,10 @@ describe('Integration Tests', () => {
     it('should return the pricing data for accessible datasets/frequencies', async () => {
       const response = await request(app.getHttpServer())
         .get('/datasets/bitcoin/d1/data')
-        .set('userId', 'b2227d2e-9c41-4aeb-abfd-0d704463da16') // Use existing user ID in header
+        .set('userId', 'b2227d2e-9c41-4aeb-abfd-0d704463da16')
         .expect(200)
         .catch(err => {
-          console.error('Error:', err.response ? err.response.body : err);  // Log the entire error object
+          console.error('Error:', err.response ? err.response.body : err); 
           throw err;
         });
 
@@ -191,21 +188,20 @@ describe('Integration Tests', () => {
 
   describe('Ops can provide access to datasets/frequencies for a limited amount of time', () => {
     it('should revoke access after the trial period expires', async () => {
-      // Assume the access was granted for a trial period
       await request(app.getHttpServer())
         .patch('/access-requests/revoke/b2227d2e-9c41-4aeb-abfd-0d704463da16/9f135ec5-9bd9-40eb-b3ed-e9f4e0c30d76/d0458a45-7d3a-4bbb-b618-1d06726ea7e7')
         .expect(200)
         .catch(err => {
-          console.error('Error:', err.response ? err.response.body : err);  // Log the entire error object
+          console.error('Error:', err.response ? err.response.body : err);  
           throw err;
         });
 
       const response = await request(app.getHttpServer())
         .get('/datasets/bitcoin/d1/data')
-        .set('userId', 'b2227d2e-9c41-4aeb-abfd-0d704463da16') // Use existing user ID in header
+        .set('userId', 'b2227d2e-9c41-4aeb-abfd-0d704463da16') 
         .expect(401)
         .catch(err => {
-          console.error('Error:', err.response ? err.response.body : err);  // Log the entire error object
+          console.error('Error:', err.response ? err.response.body : err);
           throw err;
         });
 

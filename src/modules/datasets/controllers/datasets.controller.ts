@@ -58,7 +58,6 @@ export class DatasetsController {
 
       return await this.datasetsService.getDatasetData(name, frequency, userId);
     } catch (error) {
-      console.log(error)
       if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
         throw error;
       }
