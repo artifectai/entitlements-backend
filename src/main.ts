@@ -24,10 +24,10 @@ async function bootstrap() {
     max: 100, 
   }));
   app.enableShutdownHooks();
-    app.useGlobalPipes(new ValidationPipe({
-      whitelist: true, 
-      forbidNonWhitelisted: true, 
-    }));
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true, 
+    forbidNonWhitelisted: true, 
+  }));
 
   const sequelize = app.get(Sequelize);
   try {

@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, BadRequestException, InternalServerErrorException } from '@nestjs/common';
+import { Controller, Get, Param, UnauthorizedException, Headers, BadRequestException, InternalServerErrorException } from '@nestjs/common';
 import { DatasetsService } from '../services/datasets.service';
 import { Dataset } from '../../../models/dataset.model';
 
@@ -49,15 +49,17 @@ export class DatasetsController {
   async getDataset(
     @Param('name') name: string,
     @Param('frequency') frequency: string,
-    @Query('userId') userId: string
+    @Headers('userId') userId: string
   ): Promise<any> {
     try {
       if (!name || !frequency || !userId) {
         throw new BadRequestException('Name, frequency, and userId parameters are required');
       }
+
       return await this.datasetsService.getDatasetData(name, frequency, userId);
     } catch (error) {
-      if (error instanceof BadRequestException) {
+      console.log(error)
+      if (error instanceof BadRequestException || error instanceof UnauthorizedException) {
         throw error;
       }
       throw new InternalServerErrorException(`Failed to retrieve dataset data for ${name} with frequency ${frequency}`);
