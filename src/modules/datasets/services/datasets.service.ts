@@ -43,7 +43,8 @@ export class DatasetsService {
 
   async getDatasetData(name: string, frequency: string, userId: string): Promise<any> {
     try {
-      const dataset = await this.datasetModel.findOne({ where: { name } });
+      const capitalizedDatasetName = capitalize(name);
+      const dataset = await this.datasetModel.findOne({ where: { name:capitalizedDatasetName } });
       if (!dataset) {
         throw new NotFoundException('Invalid dataset name');
       }
@@ -56,12 +57,12 @@ export class DatasetsService {
       const accessRequest = await this.accessRequestModel.findOne({
         where: { userId, datasetId: dataset.id, frequencyId: validFrequency.id, status: 'approved' },
       });
-
       if (!accessRequest) {
         throw new UnauthorizedException('User does not have access to this dataset or frequency');
       }
+      
+      const response = await axios.get(`https://api.coincap.io/v2/assets/${dataset.name.toLowerCase()}/history?interval=${frequency}`);
 
-      const response = await axios.get(`https://api.coincap.io/v2/assets/${dataset.symbol.toLowerCase()}/history?interval=${frequency}`);
       return response.data;
     } catch (error) {
       if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
@@ -70,5 +71,9 @@ export class DatasetsService {
         throw new InternalServerErrorException('Failed to retrieve dataset data');
       }
     }
+
+  function capitalize(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
+ }
 }

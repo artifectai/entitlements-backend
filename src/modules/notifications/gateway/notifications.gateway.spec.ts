@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsGateway } from './notifications.gateway';
 import { Server, Socket } from 'socket.io';
-import { Notification } from '../notifications.module'; // Ensure this import path is correct
+import { Notification } from '../notifications.module'; 
 
 describe('NotificationsGateway', () => {
   let gateway: NotificationsGateway;

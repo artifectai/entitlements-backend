@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { AccessRequest } from '../../../models/access-request.model';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
@@ -34,6 +34,18 @@ export class AccessRequestsService {
       isTemporary: createAccessRequestDto.isTemporary ?? false,
     };
 
+    const existingRequest = await this.accessRequestModel.findOne({
+      where: {
+        userId: accessRequestData.userId,
+        datasetId: accessRequestData.datasetId,
+        frequencyId: accessRequestData.frequencyId,
+      },
+    });
+
+    if (existingRequest) {
+      throw new ConflictException('Access request already exists');
+    }
+    
     try {
       const accessRequest = await this.accessRequestModel.create(accessRequestData);
       await this.notificationsService.sendNotification({
@@ -44,6 +56,11 @@ export class AccessRequestsService {
 
       return accessRequest;
     } catch (error) {
+      console.error('Error creating access request:', {
+        message: error.message,
+        stack: error.stack,
+        details: error,
+      });
       throw new InternalServerErrorException('Failed to create access request');
     }
   }
@@ -123,6 +140,7 @@ export class AccessRequestsService {
           accessRequest,
         });
       } catch (error) {
+        console.error('Error revoking access:', error);
         throw new InternalServerErrorException('Failed to revoke access request');
       }
     } else {
@@ -152,6 +170,7 @@ export class AccessRequestsService {
         });
       }
     } catch (error) {
+      console.error('Error checking expired access requests:', error);
       throw new InternalServerErrorException('Failed to check expired access requests');
     }
   }

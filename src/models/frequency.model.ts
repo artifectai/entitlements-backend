@@ -33,7 +33,7 @@ export class Frequency extends Model<Frequency> {
 
   @Column({
     type: DataType.DECIMAL(20, 2),
-    allowNull: false,
+    allowNull: true,
     field: 'market_cap_usd'
   })
   marketCapUsd: number;

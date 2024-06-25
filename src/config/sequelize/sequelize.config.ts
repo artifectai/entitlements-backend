@@ -3,7 +3,7 @@ import { SequelizeOptions } from 'sequelize-typescript';
 import { User } from '../../models/user.model';
 import { Dataset } from '../../models/dataset.model';
 import { AccessRequest } from '../../models/access-request.model';
-import { Frequency } from 'src/models/frequency.model';
+import { Frequency } from '../../models/frequency.model';
 
 export const getSequelizeConfig = (configService: ConfigService): SequelizeOptions => {
   const host = configService.get<string>('DB_HOST');
