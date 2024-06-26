@@ -1,7 +1,6 @@
 require('dotenv').config({ path: './.env.test' });
 
 ;module.exports = {
-    // setupFiles: ['<rootDir>/setupEnv.js'],
     moduleFileExtensions: ['js', 'json', 'ts'],
     rootDir: 'src',
     testRegex: '.*\\.spec\\.ts$',

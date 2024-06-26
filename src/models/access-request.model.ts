@@ -4,7 +4,7 @@ import { Frequency } from './frequency.model';
 import { User } from './user.model';
 
 @Table({
-  tableName: 'access_requests',
+  tableName: 'access-requests',
   schema: 'public',
   timestamps: false, 
   indexes: [
