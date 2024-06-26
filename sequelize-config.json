@@ -1,0 +1,24 @@
+{
+    "development": {
+      "username": "postgres",
+      "password": "CDPostgres*123",
+      "database": "EntitlementsDB",
+      "host": "db",
+      "dialect": "postgres"
+    },
+    "test": {
+      "username": "postgres",
+      "password": "CDPostgres*123",
+      "database": "TestDB",
+      "host": "db",
+      "dialect": "postgres"
+    },
+    "production": {
+      "username": "postgres",
+      "password": "CDPostgres*123",
+      "database": "EntitlementsDBProd",
+      "host": "db",
+      "dialect": "postgres"
+    }
+  }
+  

@@ -11,6 +11,7 @@ dotenv.config();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  console.log('Application is starting...');
 
   app.enableCors({
     origin: 'http://localhost:3000', 
@@ -38,5 +39,7 @@ async function bootstrap() {
   }
 
   await app.listen(3000);
+  console.log('Application is running on: ' + await app.getUrl());
+
 }
 bootstrap();

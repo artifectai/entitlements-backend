@@ -16,6 +16,7 @@ import { ScheduleTasksModule } from './common/schedule/schedule.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { NotificationsService } from './modules/notifications/services/notifications.service';
 import { NotificationsGateway } from './modules/notifications/gateway/notifications.gateway';
+import { HealthModule } from './common/health/health.module';
 
 @Module({
   imports: [
@@ -31,7 +32,8 @@ import { NotificationsGateway } from './modules/notifications/gateway/notificati
     DatasetsModule,
     AccessRequestsModule,
     ScheduleTasksModule,
-    NotificationsModule
+    NotificationsModule,
+    HealthModule
   ],
   providers: [DatabaseService, NotificationsService, NotificationsGateway],
 
