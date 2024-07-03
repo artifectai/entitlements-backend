@@ -47,10 +47,10 @@ export class AccessRequest extends Model<AccessRequest> {
   frequencyId: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.ENUM('pending', 'approved', 'rejected', 'expired', 'revoked'),
     allowNull: false
   })
-  status: string;
+  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'revoked';
 
   @Column({
     type: DataType.DATE,

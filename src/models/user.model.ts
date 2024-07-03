@@ -21,9 +21,9 @@ export class User extends Model<User> {
   apiKey: string;
 
   @Column({
-    type: DataType.STRING,
+    type: DataType.ENUM('Quant', 'Ops'),
     allowNull: false,
     field: 'role'
   })
-  role: string;
+  role: 'Quant' | 'Ops';
 }
