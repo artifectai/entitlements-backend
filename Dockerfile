@@ -1,4 +1,3 @@
-
 FROM node:18
 
 WORKDIR /entitlements-backend
@@ -12,7 +11,7 @@ RUN chmod +x /wait-for-it.sh
 
 RUN apt-get update && apt-get install -y netcat-openbsd
 
-COPY sequelize-config.json /entitlements-backend/sequelize-config.json
+COPY sequelize-config.js /entitlements-backend/sequelize-config.js
 COPY docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh
 

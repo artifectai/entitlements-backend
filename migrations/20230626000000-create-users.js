@@ -14,7 +14,7 @@ module.exports = {
         field: 'api_key'
       },
       role: {
-        type: Sequelize.STRING,
+        type: Sequelize.ENUM('Quant', 'Ops'),
         allowNull: false,
         field: 'role'
       },
@@ -26,6 +26,9 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       }
+    });
+    await queryInterface.addIndex('users', ['role'], {
+      name: 'users_role_idx'
     });
   },
 
