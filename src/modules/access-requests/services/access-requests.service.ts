@@ -1,21 +1,11 @@
 import { Injectable, NotFoundException, InternalServerErrorException, ConflictException } from '@nestjs/common';
+import { Op } from 'sequelize';
 import { InjectModel } from '@nestjs/sequelize';
 import { AccessRequest } from '../../../models/access-request.model';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
 import { NotificationsService } from '../../notifications/services/notifications.service';
-import { Op } from 'sequelize';
-
-interface CreateAccessRequestAttributes {
-  userId: string;
-  datasetId: string;
-  frequencyId: string;
-  status: string;
-  requestedAt: Date;
-  resolvedAt: Date | null;
-  expiryDate: Date | null;
-  isTemporary: boolean;
-}
+import { CreateAccessRequestAttributes, StatusEnum } from '../../../common/types'
 
 @Injectable()
 export class AccessRequestsService {
@@ -28,6 +18,7 @@ export class AccessRequestsService {
   async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
     const accessRequestData: CreateAccessRequestAttributes = {
       ...createAccessRequestDto,
+      status: StatusEnum.PENDING,
       requestedAt: createAccessRequestDto.requestedAt ?? new Date(),
       resolvedAt: createAccessRequestDto.resolvedAt ?? null,
       expiryDate: createAccessRequestDto.expiryDate ?? null,
@@ -56,11 +47,6 @@ export class AccessRequestsService {
 
       return accessRequest;
     } catch (error) {
-      console.error('Error creating access request:', {
-        message: error.message,
-        stack: error.stack,
-        details: error,
-      });
       throw new InternalServerErrorException('Failed to create access request');
     }
   }
@@ -95,7 +81,7 @@ export class AccessRequestsService {
     userId: string,
     datasetId: string,
     frequencyId: string,
-    status: string,
+    status: StatusEnum,
     updateAccessRequestDto: UpdateAccessRequestDto
   ): Promise<AccessRequest> {
     const accessRequest = await this.findOne(userId, datasetId, frequencyId);
@@ -131,7 +117,7 @@ export class AccessRequestsService {
     const accessRequest = await this.findOne(userId, datasetId, frequencyId);
     if (accessRequest) {
       try {
-        accessRequest.status = 'revoked';
+        accessRequest.status = StatusEnum.REVOKED;
         await accessRequest.save();
 
         await this.notificationsService.sendNotification({
@@ -140,7 +126,6 @@ export class AccessRequestsService {
           accessRequest,
         });
       } catch (error) {
-        console.error('Error revoking access:', error);
         throw new InternalServerErrorException('Failed to revoke access request');
       }
     } else {
@@ -160,7 +145,7 @@ export class AccessRequestsService {
       });
 
       for (const request of expiredRequests) {
-        request.status = 'expired';
+        request.status = StatusEnum.EXPIRED;
         await request.save();
 
         await this.notificationsService.sendNotification({
@@ -170,7 +155,6 @@ export class AccessRequestsService {
         });
       }
     } catch (error) {
-      console.error('Error checking expired access requests:', error);
       throw new InternalServerErrorException('Failed to check expired access requests');
     }
   }

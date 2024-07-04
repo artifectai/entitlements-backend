@@ -10,6 +10,7 @@ import { User } from '../src/models/user.model';
 import { AccessRequest } from '../src/models/access-request.model';
 import { TasksService } from '../src/common/schedule/tasks.service';
 import { v4 as uuidv4 } from 'uuid';
+import { StatusEnum } from '../src/common/types';
 
 describe('Integration Tests', () => {
   let app: INestApplication;
@@ -59,7 +60,7 @@ describe('Integration Tests', () => {
       userId: 'b2227d2e-9c41-4aeb-abfd-0d704463da16',
       datasetId: '9f135ec5-9bd9-40eb-b3ed-e9f4e0c30d76',
       frequencyId: 'd0458a45-7d3a-4bbb-b618-1d06726ea7e7',
-      status: 'approved',
+      status: StatusEnum.APPROVED,
       requestedAt: new Date(),
       expiryDate: new Date('2024-06-26T23:59:59.000Z'),
       isTemporary: true,
@@ -95,7 +96,7 @@ describe('Integration Tests', () => {
         userId: uuidv4(),
         datasetId: uuidv4(), 
         frequencyId: uuidv4(),
-        status: 'pending',
+        status: StatusEnum.PENDING,
         requestedAt: '2024-06-25T08:00:00.000Z',
         expiryDate: '2024-12-31T23:59:59.000Z',
         isTemporary: true,
@@ -117,7 +118,6 @@ describe('Integration Tests', () => {
         frequency: 'h1',
         marketCapUsd: 500000,
       });
-
 
       try {
         const response = await request(app.getHttpServer())
@@ -146,14 +146,14 @@ describe('Integration Tests', () => {
 
       expect(response.body).toBeInstanceOf(Array);
       response.body.forEach(request => {
-        expect(request.status).toBe('pending');
+        expect(request.status).toBe(StatusEnum.PENDING);
       });
     });
   });
 
   describe('Ops can approve or refuse a request', () => {
     it('should update the status of an access request', async () => {
-      const updatePayload = { status: 'approved' };
+      const updatePayload = { status: StatusEnum.APPROVED };
 
       const response = await request(app.getHttpServer())
         .patch('/access-requests/b2227d2e-9c41-4aeb-abfd-0d704463da16/9f135ec5-9bd9-40eb-b3ed-e9f4e0c30d76/d0458a45-7d3a-4bbb-b618-1d06726ea7e7')
@@ -185,7 +185,6 @@ describe('Integration Tests', () => {
     });
   });
 
-
   describe('Ops can provide access to datasets/frequencies for a limited amount of time', () => {
     it('should revoke access after the trial period expires', async () => {
       await request(app.getHttpServer())
@@ -208,7 +207,6 @@ describe('Integration Tests', () => {
       expect(response.body.message).toBe('User does not have access to this dataset or frequency');
     });
   });
-
 
   describe('Backfill the market-cap of each dataset every day at 8pm UTC', () => {
     it('should backfill the market cap for each dataset', async () => {

@@ -1,4 +1,15 @@
-require('dotenv').config(); 
+const dotenv = require('dotenv');
+
+switch (process.env.NODE_ENV) {
+  case 'production':
+    dotenv.config({ path: '.env.production' });
+    break;
+  case 'test':
+    dotenv.config({ path: '.env.test' });
+    break;
+  default:
+    dotenv.config({ path: '.env' });
+}
 
 module.exports = {
   development: {
@@ -11,14 +22,14 @@ module.exports = {
   test: {
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.TEST_DB_NAME,
+    database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: 'postgres',
   },
   production: {
     username: process.env.DB_USER,
     password: process.env.DB_PASS,
-    database: process.env.PROD_DB_NAME,
+    database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     dialect: 'postgres',
   },

@@ -4,6 +4,7 @@ import { AccessRequestsService } from '../services/access-requests.service';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
 import { NotFoundException, InternalServerErrorException } from '@nestjs/common';
+import { StatusEnum } from '../../../common/types'
 
 describe('AccessRequestsController', () => {
   let controller: AccessRequestsController;
@@ -16,13 +17,13 @@ describe('AccessRequestsController', () => {
     userId,
     datasetId,
     frequencyId,
-    status: 'pending',
+    status: StatusEnum.PENDING,
     requestedAt: new Date(),
   };
-  const updateDto: UpdateAccessRequestDto = { status: 'approved' };
+  const updateDto: UpdateAccessRequestDto = { status: StatusEnum.APPROVED };
   const createdAccessRequest = { id: '1', ...createDto };
-  const expectedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: 'pending' };
-  const revokedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: 'revoked' };
+  const expectedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: StatusEnum.PENDING };
+  const revokedAccessRequest = { id: '1', userId, datasetId, frequencyId, status: StatusEnum.REVOKED };
   const expectedAccessRequests = [expectedAccessRequest];
 
   beforeEach(async () => {

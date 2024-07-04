@@ -27,3 +27,5 @@ export class User extends Model<User> {
   })
   role: 'Quant' | 'Ops';
 }
+
+
