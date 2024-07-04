@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsString, IsUUID, IsDate, IsOptional, IsBoolean } from 'class-validator';
+import { IsNotEmpty, IsEnum, IsUUID, IsDate, IsOptional, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
+import { StatusEnum } from '../../../common/types'
 
 export class CreateAccessRequestDto {
   @IsUUID()
@@ -14,9 +15,9 @@ export class CreateAccessRequestDto {
   @IsNotEmpty()
   frequencyId: string;
 
-  @IsString()
+  @IsEnum(StatusEnum)
   @IsNotEmpty()
-  status: string; 
+  status: StatusEnum;
 
   @IsDate()
   @IsOptional()

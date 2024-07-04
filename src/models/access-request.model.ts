@@ -2,6 +2,7 @@ import { Table, Column, Model, DataType, ForeignKey, Index } from 'sequelize-typ
 import { Dataset } from './dataset.model';
 import { Frequency } from './frequency.model';
 import { User } from './user.model';
+import { StatusEnum } from '../common/types'
 
 @Table({
   tableName: 'access-requests',
@@ -47,10 +48,10 @@ export class AccessRequest extends Model<AccessRequest> {
   frequencyId: string;
 
   @Column({
-    type: DataType.ENUM('pending', 'approved', 'rejected', 'expired', 'revoked'),
-    allowNull: false
+    type: DataType.ENUM(...Object.values(StatusEnum)),
+    allowNull: false,
   })
-  status: 'pending' | 'approved' | 'rejected' | 'expired' | 'revoked';
+  status: StatusEnum;
 
   @Column({
     type: DataType.DATE,

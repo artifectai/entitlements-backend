@@ -1,11 +1,12 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateAccessRequestDto } from './create-access-request.dto';
-import { IsString, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+import { StatusEnum } from '../../../common/types'
 
 export class UpdateAccessRequestDto extends PartialType(CreateAccessRequestDto) {
-  @IsString()
-  @IsOptional()
-  status?: string;
+  @IsEnum(StatusEnum)
+  @IsNotEmpty()
+  status: StatusEnum;
 
   @IsDateString()
   @IsOptional()

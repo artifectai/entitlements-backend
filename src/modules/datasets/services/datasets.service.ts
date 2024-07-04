@@ -4,6 +4,7 @@ import { Dataset } from '../../../models/dataset.model';
 import { AccessRequest } from '../../../models/access-request.model';
 import { Frequency } from '../../../models/frequency.model';
 import axios from 'axios';
+import { capitalise } from '../../../common/helper-functions'
 
 @Injectable()
 export class DatasetsService {
@@ -43,8 +44,8 @@ export class DatasetsService {
 
   async getDatasetData(name: string, frequency: string, userId: string): Promise<any> {
     try {
-      const capitalizedDatasetName = capitalize(name);
-      const dataset = await this.datasetModel.findOne({ where: { name:capitalizedDatasetName } });
+      const capitalisedDatasetName = capitalise(name);
+      const dataset = await this.datasetModel.findOne({ where: { name: capitalisedDatasetName } });
       if (!dataset) {
         throw new NotFoundException('Invalid dataset name');
       }
@@ -71,9 +72,5 @@ export class DatasetsService {
         throw new InternalServerErrorException('Failed to retrieve dataset data');
       }
     }
-
-  function capitalize(str: string): string {
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
- }
 }

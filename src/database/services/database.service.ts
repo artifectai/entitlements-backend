@@ -1,13 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-
-interface DatabaseConnectionOptions {
-  user: string;
-  host: string;
-  port: number;
-  password: string;
-  database: string;
-}
+import { DatabaseConnectionOptions } from '../../common/types'
 
 @Injectable()
 export class DatabaseService {

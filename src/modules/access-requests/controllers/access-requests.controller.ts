@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, InternalServerErrorE
 import { AccessRequestsService } from '../services/access-requests.service';
 import { CreateAccessRequestDto } from '../dto/create-access-request.dto';
 import { UpdateAccessRequestDto } from '../dto/update-access-request.dto';
+import { StatusEnum } from '../../../common/types'
 
 @Controller('access-requests')
 export class AccessRequestsController {
@@ -58,7 +59,8 @@ export class AccessRequestsController {
     @Body() updateAccessRequestDto: UpdateAccessRequestDto,
   ) {
     try {
-      return await this.accessRequestsService.update(userId, datasetId, frequencyId, updateAccessRequestDto.status, updateAccessRequestDto);
+      const status = StatusEnum[updateAccessRequestDto.status.toUpperCase() as keyof typeof StatusEnum];
+      return await this.accessRequestsService.update(userId, datasetId, frequencyId, status, updateAccessRequestDto);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
