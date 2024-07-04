@@ -24,12 +24,6 @@ export class NotificationsGateway implements OnGatewayInit, OnGatewayConnection,
     this.logger.log(`Client connected: ${client.id}`);
   }
 
-  @SubscribeMessage('messageToServer')
-  handleMessage(client: Socket, payload: any): void {
-    this.logger.log(`Message from client ${client.id}: ${JSON.stringify(payload)}`);
-    this.server.emit('messageToClient', payload);
-  }
-
   sendNotification(notification: Notification) {
     this.logger.log(`Sending notification: ${JSON.stringify(notification)}`);
     this.server.emit('notification', notification);
