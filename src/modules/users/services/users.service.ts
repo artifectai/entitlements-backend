@@ -25,7 +25,7 @@ export class UsersService {
 
   async generateToken(apiKey: string): Promise<string> {
     const user = await this.findByApiKey(apiKey);
-    const payload = { apiKey: user.apiKey, sub: user.id };
+    const payload = { apiKey: user.apiKey, sub: user.id, role: user.role };
     return this.jwtService.sign(payload);
   }
 

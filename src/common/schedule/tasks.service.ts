@@ -55,6 +55,7 @@ export class TasksService {
     try {
       const response = await axios.get(`https://api.coincap.io/v2/assets/${frequency.dataset.name.toLowerCase()}`);
       const marketCapUsd = response.data.data.marketCapUsd;
+
       frequency.marketCapUsd = marketCapUsd;
       await frequency.save();
 

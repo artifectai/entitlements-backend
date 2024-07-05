@@ -19,7 +19,7 @@ export class DatasetsService {
 
   async findAll(): Promise<Dataset[]> {
     try {
-      return await this.datasetModel.findAll();
+      return await this.datasetModel.findAll({ include: [Frequency] });
     } catch (error) {
       throw new InternalServerErrorException('Failed to retrieve datasets');
     }
@@ -27,7 +27,10 @@ export class DatasetsService {
 
   async findBySymbol(symbol: string): Promise<Dataset[]> {
     try {
-      return await this.datasetModel.findAll({ where: { symbol } });
+      return await this.datasetModel.findAll({ 
+        where: { symbol },
+        include: [Frequency]
+      });
     } catch (error) {
       throw new InternalServerErrorException(`Failed to retrieve datasets with symbol ${symbol}`);
     }

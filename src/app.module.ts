@@ -7,7 +7,7 @@ import { Dataset } from './models/dataset.model';
 import { Frequency } from './models/frequency.model';
 import { AccessRequest } from './models/access-request.model';
 import { getSequelizeConfig } from './config/sequelize/sequelize.config';
-import { ConfigService } from '@nestjs/config';
+import { ConfigService, ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { UsersModule } from './modules/users/users.module';
 import { DatasetsModule } from './modules/datasets/datasets.module';
@@ -17,6 +17,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { NotificationsService } from './modules/notifications/services/notifications.service';
 import { NotificationsGateway } from './modules/notifications/gateway/notifications.gateway';
 import { HealthModule } from './common/health/health.module';
+import { AuthModule } from './common/auth/auth.module';
 
 @Module({
   imports: [
@@ -33,16 +34,13 @@ import { HealthModule } from './common/health/health.module';
     AccessRequestsModule,
     ScheduleTasksModule,
     NotificationsModule,
-    HealthModule
+    HealthModule, 
+    AuthModule
   ],
   providers: [DatabaseService, NotificationsService, NotificationsGateway],
 
 })
-
 export class AppModule {}
-
-
-
 
 
 

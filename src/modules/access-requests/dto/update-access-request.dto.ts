@@ -7,15 +7,7 @@ export class UpdateAccessRequestDto extends PartialType(CreateAccessRequestDto) 
   @IsEnum(StatusEnum)
   @IsNotEmpty()
   status: StatusEnum;
-
-  @IsDateString()
-  @IsOptional()
-  requestedAt?: Date;
-
-  @IsDateString()
-  @IsOptional()
-  resolvedAt?: Date;
-
+  
   @IsDateString()
   @IsOptional()
   expiryDate?: Date;

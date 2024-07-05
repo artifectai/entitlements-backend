@@ -12,4 +12,8 @@ export class ConfigService {
   getDatabaseUser(): string | undefined {
     return this.configService.get<string>('DB_USER');
   }
+
+  getJwtSecret(): string | undefined {
+    return this.configService.get('JWT_SECRET');
+  }
 }
