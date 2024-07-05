@@ -1,10 +1,12 @@
 import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { TasksService } from './tasks.service';
+import { Public } from '../auth/public.decorator';
 
 @Controller('tasks')
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
+  @Public()
   @Get('run-cron')
   async runCron() {
     try {
@@ -15,6 +17,7 @@ export class TasksController {
     }
   }
 
+  @Public()
   @Get('run-backfill')
   async runBackfill() {
     try {

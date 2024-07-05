@@ -15,21 +15,25 @@ export class AccessRequestsService {
     private notificationsService: NotificationsService
   ) {}
 
-  async create(createAccessRequestDto: CreateAccessRequestDto): Promise<AccessRequest> {
+  async create(createAccessRequestDto: CreateAccessRequestDto & { userId: string }): Promise<AccessRequest> {
+    const { userId, datasetId, frequencyId, ...rest } = createAccessRequestDto;
+
     const accessRequestData: CreateAccessRequestAttributes = {
-      ...createAccessRequestDto,
+      datasetId,
+      frequencyId,
+      userId,
       status: StatusEnum.PENDING,
-      requestedAt: createAccessRequestDto.requestedAt ?? new Date(),
-      resolvedAt: createAccessRequestDto.resolvedAt ?? null,
-      expiryDate: createAccessRequestDto.expiryDate ?? null,
-      isTemporary: createAccessRequestDto.isTemporary ?? false,
+      requestedAt: new Date(),
+      resolvedAt: null,
+      expiryDate: null,
+      isTemporary: false,
     };
 
     const existingRequest = await this.accessRequestModel.findOne({
       where: {
-        userId: accessRequestData.userId,
-        datasetId: accessRequestData.datasetId,
-        frequencyId: accessRequestData.frequencyId,
+        userId,
+        datasetId,
+        frequencyId
       },
     });
 
@@ -41,7 +45,7 @@ export class AccessRequestsService {
       const accessRequest = await this.accessRequestModel.create(accessRequestData);
       await this.notificationsService.sendNotification({
         type: 'NEW_ACCESS_REQUEST',
-        message: `New access request from user ${accessRequestData.userId} for dataset ${accessRequestData.datasetId} (${accessRequestData.frequencyId})`,
+        message: `New access request from user ${userId} for dataset ${datasetId} (${frequencyId})`,
         accessRequest,
       });
 
@@ -68,13 +72,17 @@ export class AccessRequestsService {
   }
 
   async findOne(userId: string, datasetId: string, frequencyId: string): Promise<AccessRequest> {
-    const accessRequest = await this.accessRequestModel.findOne({
-      where: { userId, datasetId, frequencyId },
-    });
-    if (!accessRequest) {
-      throw new NotFoundException('Access request not found');
+    try {
+      const accessRequest = await this.accessRequestModel.findOne({
+        where: { userId, datasetId, frequencyId },
+      });
+      if (!accessRequest) {
+        throw new NotFoundException('Access request not found');
+      }
+      return accessRequest;
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to retrieve access request');
     }
-    return accessRequest;
   }
 
   async update(
@@ -84,14 +92,19 @@ export class AccessRequestsService {
     status: StatusEnum,
     updateAccessRequestDto: UpdateAccessRequestDto
   ): Promise<AccessRequest> {
-    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
-
-    if (!accessRequest) {
-      throw new NotFoundException('Access request not found');
-    }
-
     try {
-      await accessRequest.update({ ...updateAccessRequestDto, status });
+      const accessRequest = await this.findOne(userId, datasetId, frequencyId);
+
+      if (!accessRequest) {
+        throw new NotFoundException('Access request not found');
+      }
+
+      await accessRequest.update({
+        ...updateAccessRequestDto,
+        status: status,
+        resolvedAt: status !== StatusEnum.PENDING ? new Date() : accessRequest.resolvedAt,
+      });
+      
       await this.notificationsService.sendNotification({
         type: 'ACCESS_REQUEST_UPDATED',
         message: `Your access request for dataset ${datasetId} and frequency ${frequencyId} has been ${status}.`,
@@ -105,18 +118,22 @@ export class AccessRequestsService {
   }
 
   async remove(userId: string, datasetId: string, frequencyId: string): Promise<void> {
-    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
-    if (accessRequest) {
-      await accessRequest.destroy();
-    } else {
-      throw new NotFoundException('Access request not found');
+    try {
+      const accessRequest = await this.findOne(userId, datasetId, frequencyId);
+      if (accessRequest) {
+        await accessRequest.destroy();
+      } else {
+        throw new NotFoundException('Access request not found');
+      }
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to remove access request');
     }
   }
 
   async revokeAccess(userId: string, datasetId: string, frequencyId: string): Promise<void> {
-    const accessRequest = await this.findOne(userId, datasetId, frequencyId);
-    if (accessRequest) {
-      try {
+    try {
+      const accessRequest = await this.findOne(userId, datasetId, frequencyId);
+      if (accessRequest) {
         accessRequest.status = StatusEnum.REVOKED;
         await accessRequest.save();
 
@@ -125,11 +142,11 @@ export class AccessRequestsService {
           message: `Your access for dataset ${datasetId} and frequency ${frequencyId} has been revoked.`,
           accessRequest,
         });
-      } catch (error) {
-        throw new InternalServerErrorException('Failed to revoke access request');
+      } else {
+        throw new NotFoundException('Access request not found');
       }
-    } else {
-      throw new NotFoundException('Access request not found');
+    } catch (error) {
+      throw new InternalServerErrorException('Failed to revoke access request');
     }
   }
 
